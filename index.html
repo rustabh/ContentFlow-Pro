@@ -351,7 +351,7 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",
 
 let state=null, toastTimer=null, attDraft=null, pendingImport=null;
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2300)}
-async function save(){await store.set(JSON.stringify(state))}
+async function save(){state._ts=Date.now();await store.set(JSON.stringify(state));queueCloudPush()}
 
 /* ---- data dictionaries ---- */
 const PERSONAL_CATS=["Food","Groceries","Shopping","Petrol","Travel","Medical","Entertainment","Family","Personal Investment","Subscriptions","Other"];
@@ -534,7 +534,7 @@ function renderChrome(){
   $("#pageSub").textContent=titles[state.view][1];
   const overdue=allInstallments().filter(i=>i.status==="overdue").length;
   const dueRecur=state.recurring.filter(r=>r.active&&["overdue","today"].includes(recurStatus(r,monthKey(today())))).length;
-  $("#sideFoot").innerHTML=`<b style="color:var(--muted)">Prototype</b> · saved in this browser.<br>${(overdue||dueRecur)?`<span style="color:var(--red)">${overdue+dueRecur} thing${overdue+dueRecur>1?"s":""} need attention</span>`:"All caught up."}`;
+  $("#sideFoot").innerHTML=`<span id="syncBadge">${syncBadgeHtml()}</span><br>${(overdue||dueRecur)?`<span style="color:var(--red)">${overdue+dueRecur} thing${overdue+dueRecur>1?"s":""} need attention</span>`:"All caught up."}`;
 }
 
 /* ---- charts ---- */
@@ -948,6 +948,15 @@ function vSettings(){
       ${row("Bank",b.bankName)}${row("A/C number",b.bankAcct)}${row("IFSC",b.bankIfsc)}${row("Branch",b.branch)}${row("UPI ID",b.upi)}
       <div style="font-size:11.5px;color:var(--muted);margin-top:10px">Added to invoices and WhatsApp reminders so clients can pay you directly.</div></div>
   </div>
+  <div class="section-head"><span class="eyebrow no-print">Cloud sync</span></div>
+  <div class="card no-print" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <div style="flex:1;min-width:220px">
+      <div style="font-weight:600">${syncCfg()?"☁ Connected — data cloud me save ho raha hai":"Data abhi sirf is browser me hai"}</div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:3px">${syncCfg()?`Workspace: <b>${esc((syncCfg()||{}).room||"")}</b> · har change auto-sync hota hai · doosre device pe same URL/key/workspace daalo`:"Free Supabase database connect karo — phone aur laptop pe same data, kabhi delete nahi hoga."}</div>
+    </div>
+    ${syncCfg()?`<button class="btn" data-action="syncNow">⟳ Sync now</button>`:""}
+    <button class="btn primary" data-action="cloudSetup">${syncCfg()?"Sync settings":"⚡ Set up cloud sync"}</button>
+  </div>
   <div class="section-head"><span class="eyebrow no-print">Data & backup</span></div>
   <div class="card no-print" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" data-action="exportJSON">⬇ Backup (JSON)</button><button class="btn" data-action="importBackup">⬆ Restore backup</button><button class="btn" data-action="exportCSV">⬇ Ledger (CSV)</button><button class="btn" data-action="exportClientsCSV">⬇ Clients (CSV)</button><button class="btn" data-action="exportLeadsCSV">⬇ Leads (CSV)</button><button class="btn ghost" data-action="reset" style="margin-left:auto;color:var(--red)">Reset all data</button></div>
   <div style="font-size:11.5px;color:var(--muted);margin-top:10px">Tip: take a JSON backup before restoring, and to move your data to another device — restore the file there.</div>
@@ -972,6 +981,55 @@ function viewInvoice(id){
   const sumRows=i.gstType==="inter"?`<tr><td>IGST @ ${rate}%</td><td class="r">${amt(tax)}</td></tr>`:`<tr><td>SGST @ ${rate/2}%</td><td class="r">${amt(half)}</td></tr><tr><td>CGST @ ${rate/2}%</td><td class="r">${amt(half)}</td></tr><tr><td>IGST @ 18%</td><td class="r">0.00</td></tr>`;
   const paper=`<div class="invpaper"><div class="invtitle">TAX INVOICE</div><div class="invhead"><div class="invlogo"><img src="${ICON}"><div class="invname">${esc(B.name||"Incinc Media")}</div><div class="invtag">${esc(B.tagline||"")}</div></div><div class="invfrom"><div><b>Address:</b> ${esc(B.address||"")}</div><div><b>Mobile:</b> ${esc(B.phone||"")}</div><div><b>E-mail:</b> ${esc(B.email||"")}</div><div><b>Website:</b> ${esc(B.website||"")}</div></div></div><div class="invmeta"><div class="invbill"><div class="lbl">BILL TO</div><div class="bd"><div class="m">M/s. <b>${esc(clientName)}</b></div>${c.address?`<div>${esc(c.address)}</div>`:""}<div style="margin-top:4px">State: <b>${esc(cs.name||"\u2014")}</b> &nbsp; Code: <b>${esc(cs.code||"\u2014")}</b></div>${c.gst?`<div>GST No.: ${esc(c.gst)}</div>`:""}</div></div><div class="invno"><table><tr><td>Invoice No.</td><td>${esc(i.no)}</td></tr><tr><td>Date</td><td>${fmtDateY(i.date)}</td></tr><tr><td>Order</td><td>${esc(i.order||"Verbal")}</td></tr><tr><td>Due by</td><td>${fmtDateY(due)}</td></tr><tr><td>State / Code</td><td>${esc(ss.name||"Maharashtra")} / ${esc(ss.code||"27")}</td></tr></table></div></div><table class="invitems"><thead><tr><th class="c">Sr.</th><th style="text-align:left">Particulars</th><th class="c">HSN/SAC</th><th class="c">Qty</th><th class="r">Rate</th><th class="c">Per</th><th class="r">Amount</th></tr></thead><tbody>${rows}</tbody></table><div class="invtot"><div class="invwords"><b>Amount (in words)</b><br>Rs. ${esc(inWords(total))}</div><table class="invsum"><tr><td>SUB TOTAL</td><td class="r">${amt(i.taxable)}</td></tr>${sumRows}<tr class="grand"><td>TOTAL</td><td class="r">${amt(total)}</td></tr></table></div><div class="invfoot"><div class="invleft"><div>GST No. <b>${esc(B.gstin||"")}</b></div><div>PAN No. <b>${esc(B.pan||"")}</b></div><div class="decl"><b>Declaration:</b> Certified that the particulars given above are true and correct.</div><div><b>Company's Bank Details:</b> ${esc(B.name||"Incinc Media")} (Current A/c)<br>Bank: ${esc(B.bankName||"")} &nbsp;&middot;&nbsp; A/c No.: ${esc(B.bankAcct||"")}<br>IFSC: ${esc(B.bankIfsc||"")}${B.branch?` &nbsp;&middot;&nbsp; Branch: ${esc(B.branch)}`:""}${B.upi?`<br>UPI: ${esc(B.upi)}`:""}</div></div><div class="invsign"><div class="sg">For ${esc(B.name||"Incinc Media")}</div><div style="flex:1"></div><div>Authorised Signatory / Proprietor</div></div></div></div>`;
   openModal(`<div class="mh"><h3>Invoice ${esc(i.no)} &middot; <span style="font-weight:400;color:var(--muted);font-size:13px">${i.status}</span></h3><button class="x" data-action="closeModal">\u2715</button></div><div class="mb">${paper}</div><div class="mf"><button class="btn ghost" data-action="closeModal">Close</button>${c.phone?`<button class="btn wa" data-action="waInvoice" data-id="${i.id}">WhatsApp</button>`:""}<button class="btn primary" data-action="print">\u2318 Print / Save PDF</button></div>`,true);
+}
+
+/* ---- cloud sync (Supabase) ---- */
+const SYNC_KEY="incinccrm:sync";
+const SYNC_SQL=["create table if not exists crm_state (","  id text primary key,","  data jsonb not null,","  updated_at timestamptz not null default now()",");","alter table crm_state enable row level security;","drop policy if exists \"crm_anon_all\" on crm_state;","create policy \"crm_anon_all\" on crm_state for all using (true) with check (true);"].join("\n");
+let syncTimer=null, syncStatus="off";
+function syncCfg(){try{return JSON.parse(localStorage.getItem(SYNC_KEY))||null}catch{return null}}
+function setSyncCfg(c){try{if(c)localStorage.setItem(SYNC_KEY,JSON.stringify(c));else localStorage.removeItem(SYNC_KEY)}catch{}}
+function syncHeaders(c){return {"apikey":c.key,"Authorization":"Bearer "+c.key,"Content-Type":"application/json"}}
+async function cloudPull(){
+  const c=syncCfg(); if(!c||!c.url||!c.key||!c.room) return {ok:false};
+  try{
+    const r=await fetch(`${c.url}/rest/v1/crm_state?id=eq.${encodeURIComponent(c.room)}&select=data,updated_at`,{headers:syncHeaders(c)});
+    if(!r.ok) return {ok:false,code:r.status};
+    const rows=await r.json();
+    return {ok:true,row:rows[0]||null};
+  }catch(e){return {ok:false}}
+}
+async function cloudPush(){
+  const c=syncCfg(); if(!c||!c.url||!c.key||!c.room) return false;
+  syncStatus="syncing"; paintSync();
+  try{
+    const r=await fetch(`${c.url}/rest/v1/crm_state`,{method:"POST",headers:{...syncHeaders(c),"Prefer":"resolution=merge-duplicates"},body:JSON.stringify({id:c.room,data:state,updated_at:new Date().toISOString()})});
+    if(!r.ok) throw new Error(r.status);
+    syncStatus="ok"; c.last=Date.now(); setSyncCfg(c); paintSync(); return true;
+  }catch(e){syncStatus="error"; paintSync(); return false}
+}
+function queueCloudPush(){if(!syncCfg())return;clearTimeout(syncTimer);syncTimer=setTimeout(cloudPush,1500)}
+function syncBadgeHtml(){
+  const c=syncCfg();
+  if(!c) return `<b style="color:var(--muted)">Prototype</b> · saved in this browser.`;
+  const st=syncStatus==="error"?`<span style="color:var(--red)">sync error</span>`:syncStatus==="syncing"?"syncing…":c.last?"synced "+new Date(c.last).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):"connected";
+  return `<b style="color:var(--green)">☁ Cloud sync on</b> · ${st}`;
+}
+function paintSync(){const el=$("#syncBadge");if(el)el.innerHTML=syncBadgeHtml()}
+function syncForm(){
+  const c=syncCfg()||{};
+  openModal(`<div class="mh"><h3>Cloud sync setup</h3><button class="x" data-action="closeModal">✕</button></div><div class="mb">
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:14px;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:12px 14px">
+      Free <b style="color:var(--text)">Supabase</b> database se saara data cloud me save hota hai — phone, laptop, sab jagah same data.<br>
+      <b style="color:var(--text)">One-time setup (~3 min):</b><br>
+      1&nbsp;·&nbsp;<a href="https://supabase.com" target="_blank" rel="noopener" style="color:var(--accent-2)">supabase.com</a> pe free account banao → <b>New project</b><br>
+      2&nbsp;·&nbsp;Left menu → <b>SQL Editor</b> → SQL paste karke <b>Run</b> karo → <button class="btn sm" data-action="copySyncSQL" style="vertical-align:middle">⎘ Copy SQL</button><br>
+      3&nbsp;·&nbsp;<b>Project Settings → API</b> → Project URL &amp; anon public key neeche paste karo
+    </div>
+    <div class="field"><label>Supabase Project URL</label><input id="s_url" placeholder="https://xxxx.supabase.co" value="${esc(c.url||"")}"></div>
+    <div class="field"><label>Anon public key</label><input id="s_key" placeholder="eyJhbGciOi…" value="${esc(c.key||"")}"></div>
+    <div class="field"><label>Workspace name (har device pe SAME rakhna)</label><input id="s_room" value="${esc(c.room||"incinc-main")}"></div>
+  </div><div class="mf">${c.url?`<button class="btn red" data-action="syncOff">Disconnect</button>`:""}<button class="btn" data-action="closeModal">Cancel</button><button class="btn primary" data-action="saveSync">Connect &amp; sync</button></div>`);
 }
 
 /* ---- global search ---- */
@@ -1084,6 +1142,31 @@ async function handleAction(action,ds){
     case "waClient":{const c=state.clients.find(x=>x.id===ds.id);if(!c)break;const pend=(c.services||[]).flatMap(s=>s.installments||[]).filter(i=>i.status!=="paid").reduce((s,i)=>s+i.amount,0);const b=state.business||{};const msg=`Hi ${c.name}, gentle reminder from ${b.name||"us"}: a payment of ${fmtINR(pend)} is pending.${b.upi?` You can pay via UPI: ${b.upi}.`:""} Thank you!`;const link=waLink(c.phone,msg);if(link)window.open(link,"_blank");else copyText(msg);break}
     case "waLead":{const l=state.leads.find(x=>x.id===ds.id);if(!l)break;const b=state.business||{};const msg=`Hi ${l.name}, following up from ${b.name||"us"} regarding ${l.service||"your enquiry"}. Do let me know if you have any questions \u2014 happy to help!`;const link=waLink(l.phone,msg);if(link)window.open(link,"_blank");else copyText(msg);break}
     case "waInvoice":{const i=state.invoices.find(x=>x.id===ds.id);if(!i)break;const c=state.clients.find(x=>x.id===i.clientId)||{};const b=state.business||{};const total=i.taxable+i.taxable*i.rate/100;const msg=`Hi ${i.clientName}, sharing invoice ${i.no} for ${fmtINR(total)} (incl. GST) from ${b.name||"us"}.${b.upi?` Pay via UPI: ${b.upi}.`:""} Thank you!`;const link=waLink(c.phone,msg);if(link)window.open(link,"_blank");else copyText(msg);break}
+    /* ---- cloud sync ---- */
+    case "cloudSetup": syncForm(); break;
+    case "copySyncSQL": copyText(SYNC_SQL); break;
+    case "saveSync":{
+      const url=$("#s_url").value.trim().replace(/\/+$/,""),key=$("#s_key").value.trim(),room=($("#s_room").value.trim()||"incinc-main");
+      if(!url||!key){toast("URL aur key dono daalo");break}
+      setSyncCfg({url,key,room});
+      const res=await cloudPull();
+      if(!res.ok){setSyncCfg(null);syncStatus="off";toast(res.code===404||res.code===406?"Table nahi mili — pehle SQL run karo":"Connect nahi hua — URL/key check karo");break}
+      if(res.row&&res.row.data&&res.row.data.transactions){
+        openModal(`<div class="mh"><h3>Cloud me pehle se data hai</h3><button class="x" data-action="closeModal">✕</button></div><div class="mb">Workspace <b>${esc(room)}</b> me pehle se data mila. Kaunsa rakhna hai?<div style="font-size:11.5px;color:var(--muted);margin-top:8px">Doosra option chunne se cloud wala data is device ke data se replace ho jayega.</div></div><div class="mf"><button class="btn" data-action="syncKeepLocal">Is device ka data rakho</button><button class="btn primary" data-action="syncUseCloud">Cloud ka data lo</button></div>`);
+      }else{
+        const okp=await cloudPush();
+        closeModal();render();toast(okp?"Cloud sync on ✓":"Push fail hua — dubara try karo");
+      }
+      break}
+    case "syncUseCloud":{const res=await cloudPull();if(res.ok&&res.row&&res.row.data){state=res.row.data;await store.set(JSON.stringify(state));syncStatus="ok"}closeModal();render();toast("Cloud ka data load ho gaya ✓");break}
+    case "syncKeepLocal":{await cloudPush();closeModal();render();toast("Cloud sync on ✓ — is device ka data cloud me save ho gaya");break}
+    case "syncOff":{setSyncCfg(null);syncStatus="off";closeModal();render();toast("Cloud sync band — data ab sirf is browser me");break}
+    case "syncNow":{
+      const res=await cloudPull();
+      if(res.ok&&res.row&&res.row.data&&(res.row.data._ts||0)>(state._ts||0)){state=res.row.data;await store.set(JSON.stringify(state));render();toast("Cloud se naya data mila ✓")}
+      else{const okp=await cloudPush();render();toast(okp?"Synced ✓":"Sync fail — connection check karo")}
+      break}
+
     /* ---- add-ons ---- */
     case "ledgerType": state.ledgerType=ds.t; await save(); render(); break;
     case "globalSearch": globalSearchModal(); break;
@@ -1135,7 +1218,19 @@ document.addEventListener("change",e=>{
   if(state.ledgerQ===undefined)state.ledgerQ="";
   if(!state.business)state.business={name:"Incinc Media",tagline:"App | Website | Digital Marketing | Graphics | Consultancy",address:"E-211, Kailas Industrial Complex, Veer Savarkar Marg, Park Site, Link Rd, Hiranandani Gardens, Vikhroli West, Mumbai, Maharashtra 400079",phone:"8108114819 | 7498847799",email:"info@incincmedia.com, rustabh@incincmedia.com",website:"www.incincmedia.com | www.febblespot.com",gstin:"27BXVPC3577P1ZH",pan:"BXVPC3577P",bankName:"HDFC Bank",bankAcct:"50200063169673",bankIfsc:"HDFC0001471",branch:"Powai - Chandivli Farm Road",upi:""};
   else{const b=state.business;if(!b.website)b.website="www.incincmedia.com | www.febblespot.com";if(!b.pan)b.pan="BXVPC3577P";if(!b.branch)b.branch="Powai - Chandivli Farm Road";if(!b.gstin)b.gstin="27BXVPC3577P1ZH";if(!b.bankAcct)b.bankAcct="50200063169673";if(!b.bankIfsc)b.bankIfsc="HDFC0001471";if(!b.address||b.address==="Mumbai, Maharashtra")b.address="E-211, Kailas Industrial Complex, Veer Savarkar Marg, Park Site, Link Rd, Hiranandani Gardens, Vikhroli West, Mumbai, Maharashtra 400079";if(!b.phone)b.phone="8108114819 | 7498847799";if(!b.email||b.email==="hello@incincmedia.com")b.email="info@incincmedia.com, rustabh@incincmedia.com";if(!b.tagline||b.tagline==="Digital marketing & web")b.tagline="App | Website | Digital Marketing | Graphics | Consultancy";}
+  if(syncCfg()){
+    const res=await cloudPull();
+    if(res.ok){syncStatus="ok";const c=syncCfg();c.last=Date.now();setSyncCfg(c)}
+    if(res.ok&&res.row&&res.row.data&&(res.row.data._ts||0)>(state._ts||0)){state=res.row.data;await store.set(JSON.stringify(state))}
+    else if(res.ok){queueCloudPush()}
+  }
   render();
+  setInterval(async()=>{
+    if(document.hidden||!syncCfg())return;
+    if($("#overlay").classList.contains("show"))return;
+    const res=await cloudPull();
+    if(res.ok&&res.row&&res.row.data&&(res.row.data._ts||0)>(state._ts||0)){state=res.row.data;await store.set(JSON.stringify(state));render()}
+  },60000);
   if("serviceWorker" in navigator && location.protocol.startsWith("http")){try{navigator.serviceWorker.register("./sw.js")}catch(e){}}
 })();
 </script>

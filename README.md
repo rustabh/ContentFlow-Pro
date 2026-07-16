@@ -60,6 +60,13 @@ A single-file CRM + finance manager built for **Incinc Media** — a digital age
 - Leads by source + conversion view
 - Print / PDF export
 
+### ☁️ Cloud Sync (Supabase)
+- 🆕 **Real cloud storage** — connect a free [Supabase](https://supabase.com) project and every change auto-saves to the cloud (debounced, last-write-wins)
+- Same data on phone + laptop: enter the same URL / key / workspace name on each device
+- Offline-first: works without internet, syncs when back online; pulls remote changes every 60s
+- Smart first-connect: if the cloud already has data, the app asks which copy to keep
+- Setup is one-time (~3 min): create project → run the provided SQL (copy button in the app) → paste Project URL + anon key in **Settings → Cloud sync**
+
 ### ⚙️ Settings, Data & Backup
 - Business profile (name, address, GSTIN, PAN) — printed on every invoice
 - Bank + UPI details — added to invoices and WhatsApp reminders
@@ -79,6 +86,7 @@ A single-file CRM + finance manager built for **Incinc Media** — a digital age
 
 | Add-on | Where |
 |---|---|
+| Cloud sync — data stored in a free Supabase database, multi-device | Settings → Cloud sync |
 | Global search with keyboard shortcut (Ctrl/⌘+K) | Topbar 🔍 button, everywhere |
 | Ledger live search + type filter tabs | Ledger |
 | Duplicate invoice (next-period billing in one click) | Invoices |
@@ -90,7 +98,6 @@ A single-file CRM + finance manager built for **Incinc Media** — a digital age
 - Quotation/proposal builder (like invoices, convertible to invoice on approval)
 - Lead pipeline Kanban drag-and-drop view
 - Receipt/photo attachments on expenses
-- Multi-user sync via a small backend (Supabase/Firebase)
 - PIN lock for the app
 - E-invoice / GSTR-1 JSON export
 
