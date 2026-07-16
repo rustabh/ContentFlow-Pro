@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
   ws.mergeCells(1, 1, 1, COLUMNS.length);
   const title = ws.getCell(1, 1);
   title.value = `${clientLabel} — Content Calendar${month ? ` (${monthLabel(month)})` : ""}`;
-  title.font = { bold: true, size: 16, color: { argb: "FF8E4585" } };
+  title.font = { bold: true, size: 16, color: { argb: "FF7E2FA8" } };
   ws.getRow(1).height = 28;
   ws.mergeCells(2, 1, 2, COLUMNS.length);
   const subtitle = ws.getCell(2, 1);
@@ -89,9 +89,9 @@ export async function GET(req: NextRequest) {
     const cell = header.getCell(i + 1);
     cell.value = c.header;
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF8E4585" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7E2FA8" } };
     cell.alignment = { vertical: "middle" };
-    cell.border = { bottom: { style: "thin", color: { argb: "FF6E2F66" } } };
+    cell.border = { bottom: { style: "thin", color: { argb: "FF5B21B6" } } };
   });
   header.height = 22;
 
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     row.alignment = { vertical: "top", wrapText: true };
     if (idx % 2 === 1) {
       row.eachCell({ includeEmpty: true }, (cell) => {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7F3F7" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7F1FB" } };
       });
     }
     row.eachCell({ includeEmpty: true }, (cell) => {

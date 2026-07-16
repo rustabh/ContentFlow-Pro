@@ -13,7 +13,13 @@ import {
   Select,
   Spinner,
 } from "@/components/ui";
-import { PLATFORMS, STATUSES, STATUS_COLORS, TYPE_COLORS } from "@/lib/constants";
+import {
+  PLATFORMS,
+  PLATFORM_COLORS,
+  STATUSES,
+  STATUS_COLORS,
+  TYPE_COLORS,
+} from "@/lib/constants";
 import type { Client, ContentItem } from "@/lib/types";
 import { currentMonth, formatDate, formatTime, monthLabel, monthOptions } from "@/lib/utils";
 
@@ -194,7 +200,11 @@ export default function PlannerPage() {
                   <td className="whitespace-nowrap px-4 py-3 text-gray-500">
                     {formatTime(item.time)}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{item.platform}</td>
+                  <td className="px-4 py-3">
+                    <Badge color={PLATFORM_COLORS[item.platform]}>
+                      {item.platform}
+                    </Badge>
+                  </td>
                   <td className="px-4 py-3">
                     <Badge color={TYPE_COLORS[item.type]}>{item.type}</Badge>
                   </td>

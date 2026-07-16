@@ -12,6 +12,7 @@ import {
   PageHeader,
   Spinner,
 } from "@/components/ui";
+import { PLATFORM_COLORS } from "@/lib/constants";
 import type { Client } from "@/lib/types";
 import { formatDate, isClientActive } from "@/lib/utils";
 
@@ -150,9 +151,9 @@ export default function ClientsPage() {
                     {client.packageStart ? formatDate(client.packageStart) : "—"} →{" "}
                     {client.packageEnd ? formatDate(client.packageEnd) : "—"}
                   </div>
-                  <div className="flex items-center gap-1.5 pt-1">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
                     {client.platforms.map((p) => (
-                      <Badge key={p} color="bg-primary-50 text-primary-600">
+                      <Badge key={p} color={PLATFORM_COLORS[p]}>
                         {p}
                       </Badge>
                     ))}

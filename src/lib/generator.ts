@@ -1,4 +1,4 @@
-import { BEST_TIMES } from "./constants";
+import { BEST_TIMES, REEL_PLATFORMS, STORY_PLATFORMS } from "./constants";
 import type {
   Client,
   ContentItem,
@@ -77,16 +77,23 @@ export function generateMonthlyPlan(
   const platforms: Platform[] =
     client.platforms.length > 0 ? client.platforms : ["Instagram"];
 
+  // Reels rotate across the client's video platforms (IG/TikTok/YouTube/FB),
+  // Stories stay on platforms that support them; everything else rotates freely.
+  const reelTargets = platforms.filter((p) => REEL_PLATFORMS.includes(p));
+  const storyTargets = platforms.filter((p) => STORY_PLATFORMS.includes(p));
+
   const timeCursor: Record<string, number> = {};
+  const typeCursor: Record<string, number> = {};
 
   return types.map((type, i) => {
-    // Stories & reels lean Instagram; other formats rotate across the client's platforms.
+    const nth = typeCursor[type] ?? 0;
+    typeCursor[type] = nth + 1;
+
+    let pool = platforms;
+    if (type === "Reel" && reelTargets.length > 0) pool = reelTargets;
+    if (type === "Story" && storyTargets.length > 0) pool = storyTargets;
     const platform: Platform =
-      type === "Story" || type === "Reel"
-        ? platforms.includes("Instagram")
-          ? "Instagram"
-          : platforms[i % platforms.length]
-        : platforms[i % platforms.length];
+      pool === platforms ? platforms[i % platforms.length] : pool[nth % pool.length];
 
     const times = postingTimes[platform] ?? BEST_TIMES[platform];
     const cursor = timeCursor[platform] ?? 0;

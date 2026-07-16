@@ -1,16 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #f7f0f6;
-  --color-primary-100: #eedfec;
-  --color-primary-200: #ddbfd9;
-  --color-primary-300: #c795c0;
-  --color-primary-400: #ab6ba3;
-  --color-primary-500: #8e4585;
-  --color-primary-600: #7a3b72;
-  --color-primary-700: #642f5d;
-  --color-primary-800: #4b2346;
-  --color-primary-900: #33182f;
+  /* Incinc Media brand palette — violet → magenta (from the logo) */
+  --color-primary-50: #faf5fd;
+  --color-primary-100: #f3e7fa;
+  --color-primary-200: #e5cbf4;
+  --color-primary-300: #d0a3e8;
+  --color-primary-400: #b571d6;
+  --color-primary-500: #9333bb;
+  --color-primary-600: #7e2fa8;
+  --color-primary-700: #67268a;
+  --color-primary-800: #4f1e69;
+  --color-primary-900: #38154a;
+
+  --color-brand-violet: #5b21b6;
+  --color-brand-magenta: #a21caf;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;

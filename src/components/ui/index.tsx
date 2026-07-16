@@ -61,7 +61,7 @@ export function Button({
 }) {
   const styles = {
     primary:
-      "bg-primary-500 text-white hover:bg-primary-600 shadow-sm disabled:bg-primary-300",
+      "bg-gradient-to-r from-brand-violet to-brand-magenta text-white hover:opacity-90 shadow-sm disabled:opacity-50",
     secondary:
       "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm",
     ghost: "text-gray-600 hover:bg-gray-100",
@@ -117,7 +117,7 @@ export function ProgressBar({
       )}
       <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
         <div
-          className="h-full rounded-full bg-primary-500 transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-brand-violet to-brand-magenta transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>

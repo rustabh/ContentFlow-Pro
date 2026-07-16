@@ -46,7 +46,7 @@ function seedDb(): Database {
       monthlyStories: 20,
       shootDays: 4,
       shootFrequency: "Weekly",
-      platforms: ["Instagram", "Facebook"],
+      platforms: ["Instagram", "Facebook", "Pinterest", "TikTok"],
       notes: "Focus on before/after results and skincare education.",
       createdAt: new Date().toISOString(),
     },
@@ -65,7 +65,7 @@ function seedDb(): Database {
       monthlyStories: 12,
       shootDays: 2,
       shootFrequency: "Bi-Weekly",
-      platforms: ["Instagram", "Facebook", "LinkedIn"],
+      platforms: ["Instagram", "Facebook", "LinkedIn", "YouTube"],
       notes: "Weekly property walkthroughs; LinkedIn for market insights.",
       createdAt: new Date().toISOString(),
     },
@@ -104,8 +104,17 @@ export function readDb(): Database {
   }
   const raw = fs.readFileSync(DB_FILE, "utf-8");
   const db = JSON.parse(raw) as Database;
-  // Backfill settings for older data files.
-  db.settings = { ...DEFAULT_SETTINGS, ...db.settings };
+  // Backfill settings for older data files (deep-merged so newly added
+  // platforms get their default posting times).
+  db.settings = {
+    ...DEFAULT_SETTINGS,
+    ...db.settings,
+    postingTimes: {
+      ...DEFAULT_SETTINGS.postingTimes,
+      ...(db.settings?.postingTimes ?? {}),
+    },
+    team: { ...DEFAULT_SETTINGS.team, ...(db.settings?.team ?? {}) },
+  };
   return db;
 }
 

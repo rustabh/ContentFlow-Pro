@@ -1,4 +1,12 @@
-export type Platform = "Instagram" | "Facebook" | "LinkedIn";
+export type Platform =
+  | "Instagram"
+  | "Facebook"
+  | "LinkedIn"
+  | "YouTube"
+  | "Pinterest"
+  | "TikTok"
+  | "X (Twitter)"
+  | "Threads";
 
 export type ContentType = "Post" | "Reel" | "Carousel" | "Story";
 

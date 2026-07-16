@@ -156,8 +156,8 @@ export default function ClientForm({
             />
           </Field>
         </div>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <Field label="Shoot Frequency">
+        <div className="mt-3 grid gap-4">
+          <Field label="Shoot Frequency" className="sm:max-w-56">
             <Select
               value={draft.shootFrequency}
               onChange={(e) =>
@@ -170,7 +170,7 @@ export default function ClientForm({
             </Select>
           </Field>
           <Field label="Platforms">
-            <div className="flex gap-2 pt-1">
+            <div className="flex flex-wrap gap-2 pt-1">
               {PLATFORMS.map((p) => (
                 <button
                   key={p}
@@ -178,7 +178,7 @@ export default function ClientForm({
                   onClick={() => togglePlatform(p)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                     draft.platforms.includes(p)
-                      ? "bg-primary-500 text-white"
+                      ? "bg-gradient-to-r from-brand-violet to-brand-magenta text-white"
                       : "bg-white text-gray-500 ring-1 ring-gray-200 hover:bg-gray-100"
                   }`}
                 >
