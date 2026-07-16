@@ -91,6 +91,7 @@ export interface Idea {
 
 export interface Settings {
   agencyName: string;
+  agencyEmail: string;
   footerText: string;
   postingTimes: Record<Platform, string[]>;
   team: {

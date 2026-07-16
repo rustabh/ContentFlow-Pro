@@ -109,6 +109,15 @@ export default function SettingsPage() {
                 }
               />
             </Field>
+            <Field label="Support Email">
+              <TextInput
+                type="email"
+                value={settings.agencyEmail ?? ""}
+                onChange={(e) =>
+                  setSettings({ ...settings, agencyEmail: e.target.value })
+                }
+              />
+            </Field>
             <Field label="Footer Text">
               <TextInput
                 value={settings.footerText}

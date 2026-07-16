@@ -20,11 +20,15 @@ function getItems(req: NextRequest): {
   items: ContentItem[];
   clientLabel: string;
   month: string;
+  agencyLine: string;
 } {
   const p = req.nextUrl.searchParams;
   const clientId = p.get("clientId") ?? "";
   const month = p.get("month") ?? "";
   const db = readDb();
+  const agencyLine = `Prepared by ${db.settings.agencyName}${
+    db.settings.agencyEmail ? ` · ${db.settings.agencyEmail}` : ""
+  }`;
 
   let items = db.content;
   if (clientId) items = items.filter((c) => c.clientId === clientId);
@@ -36,6 +40,7 @@ function getItems(req: NextRequest): {
     items,
     clientLabel: client ? client.brandName || client.name : "All Clients",
     month,
+    agencyLine,
   };
 }
 
@@ -46,7 +51,7 @@ function fileStem(clientLabel: string, month: string): string {
 
 export async function GET(req: NextRequest) {
   const format = req.nextUrl.searchParams.get("format") ?? "csv";
-  const { items, clientLabel, month } = getItems(req);
+  const { items, clientLabel, month, agencyLine } = getItems(req);
 
   if (format === "csv") {
     const esc = (v: string) => `"${(v ?? "").replaceAll('"', '""')}"`;
@@ -80,7 +85,7 @@ export async function GET(req: NextRequest) {
   ws.getRow(1).height = 28;
   ws.mergeCells(2, 1, 2, COLUMNS.length);
   const subtitle = ws.getCell(2, 1);
-  subtitle.value = "Prepared by Incinc Media";
+  subtitle.value = agencyLine;
   subtitle.font = { size: 10, color: { argb: "FF888888" } };
 
   // Header row.

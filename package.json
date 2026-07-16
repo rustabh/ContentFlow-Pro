@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Client content planning and social media production management system by Incinc Media",
+  "author": "Incinc Media <support@incincmedia.com>",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

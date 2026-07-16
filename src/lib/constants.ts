@@ -98,6 +98,7 @@ export const PLATFORM_COLORS: Record<Platform, string> = {
 
 export const DEFAULT_SETTINGS: Settings = {
   agencyName: "Incinc Media",
+  agencyEmail: "support@incincmedia.com",
   footerText: "Designed by Incinc Media",
   postingTimes: BEST_TIMES,
   team: {

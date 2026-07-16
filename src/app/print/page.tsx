@@ -59,7 +59,8 @@ function PrintContent() {
             Calendar
           </h1>
           <p className="mt-0.5 text-sm text-gray-500">
-            {month ? monthLabel(month) : "All months"} · Prepared by Incinc Media
+            {month ? monthLabel(month) : "All months"} · Prepared by Incinc
+            Media · support@incincmedia.com
           </p>
         </div>
         <Logo />
@@ -113,7 +114,7 @@ function PrintContent() {
       )}
 
       <div className="mt-8 border-t border-gray-100 pt-3 text-center text-[10px] text-gray-400">
-        Designed by Incinc Media · ContentFlow Pro
+        Designed by Incinc Media · support@incincmedia.com · ContentFlow Pro
       </div>
     </div>
   );

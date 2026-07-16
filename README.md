@@ -63,4 +63,4 @@ data/db.json          # local data (auto-created & seeded, gitignored)
 
 ---
 
-Designed by **Incinc Media**.
+Designed by **Incinc Media** · [support@incincmedia.com](mailto:support@incincmedia.com)
