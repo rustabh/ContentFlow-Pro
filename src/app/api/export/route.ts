@@ -16,16 +16,16 @@ const COLUMNS = [
   { header: "Status", key: "status", width: 14 },
 ] as const;
 
-function getItems(req: NextRequest): {
+async function getItems(req: NextRequest): Promise<{
   items: ContentItem[];
   clientLabel: string;
   month: string;
   agencyLine: string;
-} {
+}> {
   const p = req.nextUrl.searchParams;
   const clientId = p.get("clientId") ?? "";
   const month = p.get("month") ?? "";
-  const db = readDb();
+  const db = await readDb();
   const agencyLine = `Prepared by ${db.settings.agencyName}${
     db.settings.agencyEmail ? ` · ${db.settings.agencyEmail}` : ""
   }`;
@@ -51,7 +51,7 @@ function fileStem(clientLabel: string, month: string): string {
 
 export async function GET(req: NextRequest) {
   const format = req.nextUrl.searchParams.get("format") ?? "csv";
-  const { items, clientLabel, month, agencyLine } = getItems(req);
+  const { items, clientLabel, month, agencyLine } = await getItems(req);
 
   if (format === "csv") {
     const esc = (v: string) => `"${(v ?? "").replaceAll('"', '""')}"`;

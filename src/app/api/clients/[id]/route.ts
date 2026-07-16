@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const db = readDb();
+  const db = await readDb();
   const client = db.clients.find((c) => c.id === id);
   if (!client) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(client);
@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PUT(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const body = await req.json();
-  const db = readDb();
+  const db = await readDb();
   const idx = db.clients.findIndex((c) => c.id === id);
   if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -69,13 +69,13 @@ export async function PUT(req: NextRequest, { params }: Params) {
     db.shoots.push(...doneShoots, ...freshShoots);
   }
 
-  writeDb(db);
+  await writeDb(db);
   return NextResponse.json(updated);
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const db = readDb();
+  const db = await readDb();
   const exists = db.clients.some((c) => c.id === id);
   if (!exists) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -83,6 +83,6 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   db.content = db.content.filter((c) => c.clientId !== id);
   db.shoots = db.shoots.filter((s) => s.clientId !== id);
   db.ideas = db.ideas.filter((i) => i.clientId !== id);
-  writeDb(db);
+  await writeDb(db);
   return NextResponse.json({ ok: true });
 }
