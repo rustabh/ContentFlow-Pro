@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "clientId and month are required" }, { status: 400 });
   }
 
-  const db = readDb();
+  const db = await readDb();
   const client = db.clients.find((c) => c.id === clientId);
   if (!client) return NextResponse.json({ error: "Client not found" }, { status: 404 });
 
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const freshShoots = generateShootPlan(client, month).slice(doneShoots.length);
   db.shoots.push(...doneShoots, ...freshShoots);
 
-  writeDb(db);
+  await writeDb(db);
   return NextResponse.json({
     content: posted.length + fresh.length,
     shoots: doneShoots.length + freshShoots.length,
