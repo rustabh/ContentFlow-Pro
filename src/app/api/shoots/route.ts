@@ -6,7 +6,7 @@ import { uid } from "@/lib/utils";
 /** GET /api/shoots?clientId=&month= */
 export async function GET(req: NextRequest) {
   const p = req.nextUrl.searchParams;
-  const db = readDb();
+  const db = await readDb();
   let shoots = db.shoots;
   const clientId = p.get("clientId");
   const month = p.get("month");
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   if (!body.clientId || !body.date) {
     return NextResponse.json({ error: "clientId and date are required" }, { status: 400 });
   }
-  const db = readDb();
+  const db = await readDb();
   const shoot: Shoot = {
     id: uid(),
     clientId: body.clientId,
@@ -37,6 +37,6 @@ export async function POST(req: NextRequest) {
     completed: Boolean(body.completed),
   };
   db.shoots.push(shoot);
-  writeDb(db);
+  await writeDb(db);
   return NextResponse.json(shoot, { status: 201 });
 }

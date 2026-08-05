@@ -1,18 +1,12 @@
-import fs from "fs";
-import path from "path";
+import { eq } from "drizzle-orm";
+import { database } from "../../db";
+import { appState } from "../../db/schema";
 import { DEFAULT_SETTINGS } from "./constants";
 import { generateIdeas, generateMonthlyPlan, generateShootPlan } from "./generator";
 import type { Client, Database } from "./types";
 import { currentMonth, toMonthKey, todayISO, uid } from "./utils";
 
-/**
- * Simple JSON-file data store. All access goes through readDb/writeDb so the
- * storage backend can be swapped for a real database later without touching
- * the API routes.
- */
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_FILE = path.join(DATA_DIR, "db.json");
+const APP_STATE_ID = "default";
 
 function emptyDb(): Database {
   return {
@@ -96,14 +90,24 @@ function seedDb(): Database {
   return db;
 }
 
-export function readDb(): Database {
-  if (!fs.existsSync(DB_FILE)) {
-    const db = seedDb();
-    writeDb(db);
-    return db;
+export async function readDb(): Promise<Database> {
+  let [row] = await database
+    .select({ data: appState.data })
+    .from(appState)
+    .where(eq(appState.id, APP_STATE_ID))
+    .limit(1);
+
+  if (!row) {
+    const seeded = seedDb();
+    await database.insert(appState).values({ id: APP_STATE_ID, data: seeded }).onConflictDoNothing();
+    [row] = await database
+      .select({ data: appState.data })
+      .from(appState)
+      .where(eq(appState.id, APP_STATE_ID))
+      .limit(1);
   }
-  const raw = fs.readFileSync(DB_FILE, "utf-8");
-  const db = JSON.parse(raw) as Database;
+
+  const db = row?.data ?? seedDb();
   // Backfill settings for older data files (deep-merged so newly added
   // platforms get their default posting times).
   db.settings = {
@@ -118,15 +122,18 @@ export function readDb(): Database {
   return db;
 }
 
-export function writeDb(db: Database): void {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  const tmp = DB_FILE + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(db, null, 2), "utf-8");
-  fs.renameSync(tmp, DB_FILE);
+export async function writeDb(db: Database): Promise<void> {
+  await database
+    .insert(appState)
+    .values({ id: APP_STATE_ID, data: db, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: appState.id,
+      set: { data: db, updatedAt: new Date() },
+    });
 }
 
-export function resetDb(): Database {
+export async function resetDb(): Promise<Database> {
   const db = seedDb();
-  writeDb(db);
+  await writeDb(db);
   return db;
 }

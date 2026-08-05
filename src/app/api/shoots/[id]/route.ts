@@ -6,7 +6,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function PUT(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const body = await req.json();
-  const db = readDb();
+  const db = await readDb();
   const idx = db.shoots.findIndex((s) => s.id === id);
   if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -20,18 +20,18 @@ export async function PUT(req: NextRequest, { params }: Params) {
     date,
     month: date.slice(0, 7),
   };
-  writeDb(db);
+  await writeDb(db);
   return NextResponse.json(db.shoots[idx]);
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const db = readDb();
+  const db = await readDb();
   const before = db.shoots.length;
   db.shoots = db.shoots.filter((s) => s.id !== id);
   if (db.shoots.length === before) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  writeDb(db);
+  await writeDb(db);
   return NextResponse.json({ ok: true });
 }
