@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
 import { generateIdeas, generateMonthlyPlan, generateShootPlan } from "@/lib/generator";
 import type { Client } from "@/lib/types";
 import { currentMonth, uid } from "@/lib/utils";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const db = await readDb();
   return NextResponse.json(db.clients);
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const body = await req.json();
   if (!body.name?.trim()) {
     return NextResponse.json({ error: "Client name is required" }, { status: 400 });

@@ -128,7 +128,25 @@ export interface Database {
   shoots: Shoot[];
   ideas: Idea[];
   settings: Settings;
+  users: User[];
+  sessions: Session[];
 }
+
+export interface User {
+  id: string;
+  username: string;
+  passwordHash: string;
+  createdAt: string;
+}
+
+export interface Session {
+  token: string;
+  userId: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export type PublicUser = Omit<User, "passwordHash">;
 
 export interface Notification {
   id: string;

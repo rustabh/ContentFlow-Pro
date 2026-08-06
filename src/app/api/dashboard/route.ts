@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb } from "@/lib/db";
 import type { ClientProgress, DashboardData, Notification } from "@/lib/types";
 import { currentMonth, formatDate, isClientActive, todayISO } from "@/lib/utils";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const db = await readDb();
   const month = currentMonth();
   const today = todayISO();

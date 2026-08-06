@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb } from "@/lib/db";
 import { PLATFORMS } from "@/lib/constants";
 import type { AnalyticsData, ClientAnalytics, MonthlyTrendPoint, PlatformCount } from "@/lib/types";
@@ -12,7 +13,10 @@ function platformBreakdownOf(items: { platform: string }[]): PlatformCount[] {
   );
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const db = await readDb();
   const month = currentMonth();
 

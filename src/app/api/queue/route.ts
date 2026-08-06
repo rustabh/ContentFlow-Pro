@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
 import { publishToMeta } from "@/lib/metaPublish";
 import type { QueueItem } from "@/lib/types";
@@ -16,7 +17,10 @@ function clientNameOf(clients: { id: string; name: string; brandName: string }[]
   return c?.brandName || c?.name || "Unknown";
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const db = await readDb();
   const nowStamp = new Date();
   const nowKey = `${nowStamp.getFullYear()}-${String(nowStamp.getMonth() + 1).padStart(2, "0")}-${String(
@@ -45,6 +49,9 @@ export async function GET() {
  * posting workflow), same as before.
  */
 export async function POST(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const body = await req.json().catch(() => ({}));
   if (body.action !== "process") {
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

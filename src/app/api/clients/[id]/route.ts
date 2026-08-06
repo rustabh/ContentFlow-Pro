@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
 import { generateMonthlyPlan, generateShootPlan } from "@/lib/generator";
 import type { Client } from "@/lib/types";
@@ -6,7 +7,10 @@ import { currentMonth } from "@/lib/utils";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_req: NextRequest, { params }: Params) {
+export async function GET(req: NextRequest, { params }: Params) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const { id } = await params;
   const db = await readDb();
   const client = db.clients.find((c) => c.id === id);
@@ -15,6 +19,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
 }
 
 export async function PUT(req: NextRequest, { params }: Params) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const { id } = await params;
   const body = await req.json();
   const db = await readDb();
@@ -73,7 +80,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const { id } = await params;
   const db = await readDb();
   const exists = db.clients.some((c) => c.id === id);

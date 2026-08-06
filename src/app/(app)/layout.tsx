@@ -1,10 +1,17 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { SearchProvider } from "@/components/layout/SearchProvider";
+import { getSessionUser, SESSION_COOKIE } from "@/lib/auth";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const user = await getSessionUser(cookieStore.get(SESSION_COOKIE)?.value);
+  if (!user) redirect("/login");
+
   return (
     <SearchProvider>
       <div className="flex min-h-screen">

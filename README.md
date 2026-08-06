@@ -22,6 +22,7 @@ deliverables, shoots, captions and content calendars.
 - **Analytics** — posting consistency, 6-month trend, platform mix, and per-client performance
 - **Exports** — professionally formatted Excel (.xlsx), CSV, and a printable PDF view
 - **Search & Filters** — global top-bar search plus client / month / platform / status filters
+- **Team Logins** — username/password accounts (Settings → Team Logins); every page and internal API route requires a session
 
 ## Tech
 
@@ -31,7 +32,7 @@ deliverables, shoots, captions and content calendars.
 - [Netlify Blobs](https://ntl.fyi/blobs) for content media attachments
 - [Anthropic SDK](https://platform.claude.com) (optional) for AI-generated content ideas
 - [exceljs](https://github.com/exceljs/exceljs) for styled Excel exports
-- No authentication (single-agency internal tool)
+- Username/password auth (`src/lib/auth.ts`, `src/lib/password.ts`) — scrypt-hashed passwords, DB-backed sessions via an httpOnly cookie; no third-party auth provider, no email delivery (password resets are done by another team member in Settings)
 
 ## Getting Started
 
@@ -53,6 +54,10 @@ clean.
 
 - `ANTHROPIC_API_KEY` — enables real AI-generated content ideas (Content Ideas page). Without it, the built-in template generator is used.
 - Per-client Instagram/Facebook **access tokens are entered in the UI** (Clients → Edit → Platform Connections), not as environment variables — they're stored per client since each client has their own social accounts.
+
+### Logging in
+
+No accounts are seeded — the first time anyone opens the deployed site, `/login` detects there are zero accounts and shows a one-time "create the first login" form instead of a sign-in form. Pick any username/password there (min 8 characters); that becomes the first admin login. After signing in, add teammates yourself from **Settings → Team Logins**; there's no email delivery, so share new passwords with teammates directly.
 
 ## Project Structure
 

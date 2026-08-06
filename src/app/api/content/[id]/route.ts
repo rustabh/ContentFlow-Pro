@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
 import { applyApproval } from "@/lib/approval";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PUT(req: NextRequest, { params }: Params) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const { id } = await params;
   const body = await req.json();
   const { approvalNote, approvedBy, ...fields } = body;
@@ -29,7 +33,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
   return NextResponse.json(db.content[idx]);
 }
 
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const { id } = await params;
   const db = await readDb();
   const before = db.content.length;
