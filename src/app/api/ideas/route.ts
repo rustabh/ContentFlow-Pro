@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { generateAiIdeas } from "@/lib/ai";
 import { readDb, writeDb } from "@/lib/db";
 import { generateIdeas } from "@/lib/generator";
 
@@ -18,7 +19,8 @@ export async function POST(req: NextRequest) {
   const client = db.clients.find((c) => c.id === body.clientId);
   if (!client) return NextResponse.json({ error: "Client not found" }, { status: 404 });
 
-  const ideas = generateIdeas(client, Number(body.count) || 6);
+  const count = Number(body.count) || 6;
+  const ideas = (await generateAiIdeas(client, count)) ?? generateIdeas(client, count);
   db.ideas.push(...ideas);
   await writeDb(db);
   return NextResponse.json(ideas, { status: 201 });

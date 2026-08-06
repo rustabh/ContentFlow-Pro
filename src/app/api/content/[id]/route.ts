@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
-import type { ApprovalLogEntry } from "@/lib/types";
-import { uid } from "@/lib/utils";
+import { applyApproval } from "@/lib/approval";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -17,29 +16,15 @@ export async function PUT(req: NextRequest, { params }: Params) {
   const date: string = fields.date ?? prev.date;
   const nextApproval = fields.approval ?? prev.approval;
 
-  const history = prev.approvalHistory ?? [];
-  const approvalChanged = nextApproval !== prev.approval;
-  const note: string = (approvalNote ?? "").trim();
-  const newEntry: ApprovalLogEntry | null =
-    approvalChanged || note
-      ? {
-          id: uid(),
-          status: nextApproval,
-          note,
-          by: (approvedBy ?? "").trim() || "Team",
-          at: new Date().toISOString(),
-        }
-      : null;
-
-  db.content[idx] = {
+  const merged = {
     ...prev,
     ...fields,
     id: prev.id,
     clientId: prev.clientId,
     date,
     month: date.slice(0, 7),
-    approvalHistory: newEntry ? [...history, newEntry] : history,
   };
+  db.content[idx] = applyApproval(merged, nextApproval, approvalNote ?? "", approvedBy ?? "");
   await writeDb(db);
   return NextResponse.json(db.content[idx]);
 }
