@@ -2,14 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { Notification } from "@/lib/types";
+import { useRouter } from "next/navigation";
+import type { Notification, PublicUser } from "@/lib/types";
 import { currentMonth, monthLabel } from "@/lib/utils";
 import { useSearch } from "./SearchProvider";
 
 export default function Topbar() {
+  const router = useRouter();
   const { query, setQuery } = useSearch();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [me, setMe] = useState<PublicUser | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,7 +20,17 @@ export default function Topbar() {
       .then((r) => r.json())
       .then((d) => setNotifications(d.notifications ?? []))
       .catch(() => {});
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setMe)
+      .catch(() => {});
   }, []);
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -103,6 +116,18 @@ export default function Topbar() {
             </div>
           )}
         </div>
+
+        {me && (
+          <div className="hidden items-center gap-2 sm:flex">
+            <span className="text-xs font-medium text-gray-500">{me.username}</span>
+            <button
+              onClick={logout}
+              className="rounded-xl px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100"
+            >
+              Log Out
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

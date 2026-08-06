@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
 import { generateMonthlyPlan, generateShootPlan } from "@/lib/generator";
 
@@ -8,6 +9,9 @@ import { generateMonthlyPlan, generateShootPlan } from "@/lib/generator";
  * anything already Posted / completed.
  */
 export async function POST(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const body = await req.json();
   const { clientId, month } = body;
   if (!clientId || !month) {

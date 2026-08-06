@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb } from "@/lib/db";
 import type { ContentItem } from "@/lib/types";
 import { formatTime, monthLabel } from "@/lib/utils";
@@ -50,6 +51,9 @@ function fileStem(clientLabel: string, month: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const format = req.nextUrl.searchParams.get("format") ?? "csv";
   const { items, clientLabel, month, agencyLine } = await getItems(req);
 

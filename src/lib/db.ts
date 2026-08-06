@@ -15,6 +15,11 @@ function emptyDb(): Database {
     shoots: [],
     ideas: [],
     settings: DEFAULT_SETTINGS,
+    // No users are seeded here — the first person to open the deployed app
+    // creates their own admin login via the /setup flow (see /api/auth/setup).
+    // Nothing password-related is ever hardcoded in source, since this repo is public.
+    users: [],
+    sessions: [],
   };
 }
 
@@ -119,6 +124,12 @@ export async function readDb(): Promise<Database> {
     },
     team: { ...DEFAULT_SETTINGS.team, ...(db.settings?.team ?? {}) },
   };
+
+  // Backfill auth arrays for data written before login was added — the
+  // /setup flow creates the first account, nothing is seeded here.
+  if (!db.users) db.users = [];
+  if (!db.sessions) db.sessions = [];
+
   return db;
 }
 
@@ -132,8 +143,10 @@ export async function writeDb(db: Database): Promise<void> {
     });
 }
 
+/** Resets clients/content/shoots/ideas/settings to fresh sample data — logins are untouched. */
 export async function resetDb(): Promise<Database> {
-  const db = seedDb();
+  const current = await readDb();
+  const db = { ...seedDb(), users: current.users, sessions: current.sessions };
   await writeDb(db);
   return db;
 }

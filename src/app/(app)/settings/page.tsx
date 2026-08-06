@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
+  Badge,
   Button,
   Card,
   Field,
@@ -10,7 +12,8 @@ import {
   TextInput,
 } from "@/components/ui";
 import { PLATFORMS } from "@/lib/constants";
-import type { Platform, Settings } from "@/lib/types";
+import type { Platform, PublicUser, Settings } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -41,7 +44,7 @@ export default function SettingsPage() {
   const reset = async () => {
     if (
       !confirm(
-        "Reset ALL data to fresh sample data? This deletes every client, plan, shoot and idea."
+        "Reset content data to fresh sample data? This deletes every client, plan, shoot and idea. Team logins are not affected."
       )
     )
       return;
@@ -179,14 +182,195 @@ export default function SettingsPage() {
         <Card>
           <h2 className="mb-1 text-sm font-semibold text-gray-800">Data</h2>
           <p className="mb-4 text-xs text-gray-400">
-            All data is stored locally in <code>data/db.json</code> — easy to
-            swap for a real database later.
+            All app data lives in a Postgres database (Netlify DB).
           </p>
           <Button variant="danger" onClick={reset}>
             Reset to Sample Data
           </Button>
         </Card>
       </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <UsersCard />
+        <ChangePasswordCard />
+      </div>
     </div>
+  );
+}
+
+function UsersCard() {
+  const [users, setUsers] = useState<PublicUser[] | null>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const load = () => {
+    fetch("/api/users")
+      .then((r) => r.json())
+      .then(setUsers)
+      .catch(() => {});
+  };
+
+  useEffect(load, []);
+
+  const addUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSaving(true);
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(body.error ?? "Failed to add user");
+      return;
+    }
+    setUsername("");
+    setPassword("");
+    load();
+  };
+
+  const removeUser = async (id: string) => {
+    if (!confirm("Remove this login? They won't be able to sign in anymore.")) return;
+    const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      alert(body.error ?? "Failed to remove user");
+      return;
+    }
+    load();
+  };
+
+  return (
+    <Card>
+      <h2 className="mb-1 text-sm font-semibold text-gray-800">Team Logins</h2>
+      <p className="mb-4 text-xs text-gray-400">
+        Add a username/password for each team member. No email delivery —
+        share the password with them directly; they can change it after
+        signing in.
+      </p>
+
+      {!users ? (
+        <Spinner />
+      ) : (
+        <div className="mb-4 space-y-2">
+          {users.map((u) => (
+            <div
+              key={u.id}
+              className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2"
+            >
+              <div>
+                <div className="text-sm font-medium text-gray-800">{u.username}</div>
+                <div className="text-xs text-gray-400">
+                  Added {formatDate(u.createdAt.slice(0, 10))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {users.length === 1 && <Badge>Only login</Badge>}
+                <Button
+                  variant="danger"
+                  onClick={() => removeUser(u.id)}
+                  className={users.length === 1 ? "pointer-events-none opacity-40" : ""}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <form onSubmit={addUser} className="grid grid-cols-2 gap-3">
+        <Field label="Username" className="col-span-1">
+          <TextInput value={username} onChange={(e) => setUsername(e.target.value)} />
+        </Field>
+        <Field label="Password (min 8 chars)" className="col-span-1">
+          <TextInput
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Field>
+        {error && <p className="col-span-2 text-xs text-red-500">{error}</p>}
+        <div className="col-span-2">
+          <Button type="submit" disabled={saving}>
+            {saving ? "Adding…" : "+ Add Team Login"}
+          </Button>
+        </div>
+      </form>
+    </Card>
+  );
+}
+
+function ChangePasswordCard() {
+  const router = useRouter();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setOk(false);
+    setSaving(true);
+    const res = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(body.error ?? "Failed to change password");
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    setOk(true);
+    setTimeout(() => setOk(false), 2000);
+  };
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
+
+  return (
+    <Card>
+      <h2 className="mb-1 text-sm font-semibold text-gray-800">My Account</h2>
+      <p className="mb-4 text-xs text-gray-400">Change your own password.</p>
+      <form onSubmit={submit} className="space-y-3">
+        <Field label="Current Password">
+          <TextInput
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+        </Field>
+        <Field label="New Password (min 8 chars)">
+          <TextInput
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+        </Field>
+        {error && <p className="text-xs text-red-500">{error}</p>}
+        <div className="flex items-center justify-between pt-1">
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving…" : ok ? "✓ Changed" : "Change Password"}
+          </Button>
+          <Button variant="secondary" onClick={logout}>
+            Log Out
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }

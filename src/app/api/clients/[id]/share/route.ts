@@ -1,11 +1,15 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
 
 type Params = { params: Promise<{ id: string }> };
 
 /** POST — return the client's existing share token, or mint one. Pass { rotate: true } to replace it. */
 export async function POST(req: NextRequest, { params }: Params) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
   const db = await readDb();

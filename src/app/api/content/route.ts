@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
 import type { ContentItem } from "@/lib/types";
 import { uid } from "@/lib/utils";
 
 /** GET /api/content?clientId=&month=&platform=&status=&q= */
 export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const p = req.nextUrl.searchParams;
   const db = await readDb();
   let items = db.content;
@@ -34,6 +38,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const body = await req.json();
   if (!body.clientId || !body.date) {
     return NextResponse.json({ error: "clientId and date are required" }, { status: 400 });

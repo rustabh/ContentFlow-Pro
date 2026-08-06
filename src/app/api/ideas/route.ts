@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAiIdeas } from "@/lib/ai";
+import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
 import { generateIdeas } from "@/lib/generator";
 
 /** GET /api/ideas?clientId= */
 export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const clientId = req.nextUrl.searchParams.get("clientId");
   const db = await readDb();
   let ideas = db.ideas;
@@ -14,6 +18,9 @@ export async function GET(req: NextRequest) {
 
 /** POST { clientId } — generate a fresh batch of ideas for the client's industry. */
 export async function POST(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
   const body = await req.json();
   const db = await readDb();
   const client = db.clients.find((c) => c.id === body.clientId);
