@@ -4,7 +4,7 @@ import type { ClientProgress, DashboardData, Notification } from "@/lib/types";
 import { currentMonth, formatDate, isClientActive, todayISO } from "@/lib/utils";
 
 export async function GET() {
-  const db = readDb();
+  const db = await readDb();
   const month = currentMonth();
   const today = todayISO();
   const clientName = (id: string) =>

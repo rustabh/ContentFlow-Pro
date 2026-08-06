@@ -21,6 +21,3 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# local data store (created and seeded automatically on first run)
-/data/db.json

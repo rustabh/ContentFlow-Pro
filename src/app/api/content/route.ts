@@ -6,7 +6,7 @@ import { uid } from "@/lib/utils";
 /** GET /api/content?clientId=&month=&platform=&status=&q= */
 export async function GET(req: NextRequest) {
   const p = req.nextUrl.searchParams;
-  const db = readDb();
+  const db = await readDb();
   let items = db.content;
 
   const clientId = p.get("clientId");
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   if (!body.clientId || !body.date) {
     return NextResponse.json({ error: "clientId and date are required" }, { status: 400 });
   }
-  const db = readDb();
+  const db = await readDb();
   const item: ContentItem = {
     id: uid(),
     clientId: body.clientId,
@@ -58,6 +58,6 @@ export async function POST(req: NextRequest) {
     status: body.status ?? "Planned",
   };
   db.content.push(item);
-  writeDb(db);
+  await writeDb(db);
   return NextResponse.json(item, { status: 201 });
 }

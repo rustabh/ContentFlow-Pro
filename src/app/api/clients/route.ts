@@ -5,7 +5,7 @@ import type { Client } from "@/lib/types";
 import { currentMonth, uid } from "@/lib/utils";
 
 export async function GET() {
-  const db = readDb();
+  const db = await readDb();
   return NextResponse.json(db.clients);
 }
 
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Client name is required" }, { status: 400 });
   }
 
-  const db = readDb();
+  const db = await readDb();
   const client: Client = {
     id: uid(),
     name: body.name.trim(),
@@ -45,6 +45,6 @@ export async function POST(req: NextRequest) {
   db.shoots.push(...generateShootPlan(client, month));
   db.ideas.push(...generateIdeas(client, 4));
 
-  writeDb(db);
+  await writeDb(db);
   return NextResponse.json(client, { status: 201 });
 }

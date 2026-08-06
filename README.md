@@ -21,7 +21,7 @@ deliverables, shoots, captions and content calendars.
 
 - [Next.js](https://nextjs.org) (App Router) + TypeScript
 - Tailwind CSS v4
-- Local JSON store (`data/db.json`) behind a single data-access module (`src/lib/db.ts`) — swap in a real database later without touching the API routes
+- [Netlify DB](https://ntl.fyi/database-environment) (Postgres via Drizzle ORM) behind a single data-access module (`src/lib/db.ts`) — the whole app state is stored as one JSON blob in the `app_state` table, so every API route reads/writes through `readDb`/`writeDb` without needing a relational rewrite
 - [exceljs](https://github.com/exceljs/exceljs) for styled Excel exports
 - No authentication (single-agency internal tool)
 
@@ -32,10 +32,14 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). On first run the app
-seeds itself with two sample clients and a generated plan for the current
-month. Use **Settings → Reset to Sample Data** to start over, or delete the
-sample clients to start clean.
+Open [http://localhost:3000](http://localhost:3000). The app needs a
+`NETLIFY_DB_URL` connection string in the environment (Netlify injects this
+automatically once **Netlify DB** is enabled for the site; for local
+development run `netlify dev` or set `NETLIFY_DB_URL` to a Postgres
+connection string yourself). On first run the app seeds itself with two
+sample clients and a generated plan for the current month. Use **Settings →
+Reset to Sample Data** to start over, or delete the sample clients to start
+clean.
 
 ## Project Structure
 
@@ -54,11 +58,14 @@ src/
     clients/ planner/ # feature components
   lib/
     types.ts          # all shared types
-    db.ts             # JSON-file data store (swap point for a real DB)
+    db.ts             # data-access module (reads/writes app_state via Drizzle)
     generator.ts      # smart scheduling, placeholder copy, idea generator
     constants.ts      # platforms, statuses, best posting times, theme maps
     utils.ts          # date/format helpers
-data/db.json          # local data (auto-created & seeded, gitignored)
+db/
+  index.ts            # Drizzle client (Netlify DB / Postgres)
+  schema.ts            # app_state table definition
+netlify/database/migrations/  # SQL migrations for the app_state table
 ```
 
 ---
