@@ -12,8 +12,14 @@ deliverables, shoots, captions and content calendars.
 - **Shoot Planner** — shoot days auto-calculated from the package, with location, products, models, equipment, shot list, reference link and completion tracking
 - **Content Ideas** — industry-based idea generator (topic, hook, script, caption, CTA, hashtags)
 - **Calendar View** — monthly calendar of every planned item; click any item to edit
-- **Workflow** — Planned → Shoot Pending → Editing → Approval → Scheduled → Posted, plus a separate approval state; every stage editable
+- **Workflow** — Planned → Shoot Pending → Editing → Approval → Scheduled → Posted, plus a separate approval state; every stage editable, with a full approval history trail (reviewer, note, timestamp) per item
 - **Package Logic** — changing a client's package automatically rebuilds the current month's plan (already-posted items are kept and counted)
+- **Scheduling Queue** — every "Scheduled" item in one place (Overdue / Due Today / Upcoming); "Run Due Posts" publishes automatically for clients with a connected Instagram/Facebook account, or marks items Posted for manual workflows
+- **Auto-Posting (Instagram/Facebook)** — optional per-client connection (Meta Graph API) so the Scheduling Queue can publish for real; falls back to manual status tracking when not connected
+- **Media Attachments** — attach an image or video to any content item (stored in Netlify Blobs), shown in the planner, queue, and client approval view
+- **Client Approval Links** — a shareable, token-gated read-only link per client so they can approve/reject this month's plan without an internal login
+- **AI-Generated Ideas** — when `ANTHROPIC_API_KEY` is set, the Content Ideas generator calls Claude for real, brand-specific captions instead of static templates (automatic fallback when no key is set)
+- **Analytics** — posting consistency, 6-month trend, platform mix, and per-client performance
 - **Exports** — professionally formatted Excel (.xlsx), CSV, and a printable PDF view
 - **Search & Filters** — global top-bar search plus client / month / platform / status filters
 
@@ -22,6 +28,8 @@ deliverables, shoots, captions and content calendars.
 - [Next.js](https://nextjs.org) (App Router) + TypeScript
 - Tailwind CSS v4
 - [Netlify DB](https://ntl.fyi/database-environment) (Postgres via Drizzle ORM) behind a single data-access module (`src/lib/db.ts`) — the whole app state is stored as one JSON blob in the `app_state` table, so every API route reads/writes through `readDb`/`writeDb` without needing a relational rewrite
+- [Netlify Blobs](https://ntl.fyi/blobs) for content media attachments
+- [Anthropic SDK](https://platform.claude.com) (optional) for AI-generated content ideas
 - [exceljs](https://github.com/exceljs/exceljs) for styled Excel exports
 - No authentication (single-agency internal tool)
 
@@ -41,6 +49,11 @@ sample clients and a generated plan for the current month. Use **Settings →
 Reset to Sample Data** to start over, or delete the sample clients to start
 clean.
 
+### Optional environment variables
+
+- `ANTHROPIC_API_KEY` — enables real AI-generated content ideas (Content Ideas page). Without it, the built-in template generator is used.
+- Per-client Instagram/Facebook **access tokens are entered in the UI** (Clients → Edit → Platform Connections), not as environment variables — they're stored per client since each client has their own social accounts.
+
 ## Project Structure
 
 ```
@@ -49,9 +62,12 @@ src/
     (app)/            # pages inside the sidebar/topbar shell
       page.tsx        # Dashboard
       clients/  planner/  shoots/  ideas/  calendar/  exports/  settings/
+      queue/  analytics/  # scheduling queue, analytics
+    approve/[token]/   # public, token-gated client approval page (no sidebar)
     print/            # standalone printable calendar view
     api/              # REST-ish route handlers (clients, content, shoots,
-                      # ideas, generate, dashboard, settings, export)
+                      # ideas, generate, dashboard, settings, export, queue,
+                      # analytics, media, public/approve)
   components/
     layout/           # Sidebar, Topbar, global search context
     ui/               # Card, Button, Modal, Badge, ProgressBar, fields…
@@ -60,6 +76,9 @@ src/
     types.ts          # all shared types
     db.ts             # data-access module (reads/writes app_state via Drizzle)
     generator.ts      # smart scheduling, placeholder copy, idea generator
+    ai.ts             # optional Claude-powered idea generation
+    metaPublish.ts     # Instagram/Facebook publishing via the Meta Graph API
+    approval.ts        # shared approval-history helper
     constants.ts      # platforms, statuses, best posting times, theme maps
     utils.ts          # date/format helpers
 db/

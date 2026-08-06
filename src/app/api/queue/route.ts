@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readDb, writeDb } from "@/lib/db";
+import { publishToMeta } from "@/lib/metaPublish";
 import type { QueueItem } from "@/lib/types";
 
 /**
@@ -34,7 +35,15 @@ export async function GET() {
   return NextResponse.json({ items, dueNow, serverTime: nowStamp.toISOString() });
 }
 
-/** POST { action: "process" } — mark every due "Scheduled" item as "Posted". */
+/**
+ * POST { action: "process" } — mark every due "Scheduled" item as "Posted".
+ * If the client has connected the item's platform (Instagram/Facebook via
+ * the Meta Graph API — see ClientForm "Platform Connections"), this attempts
+ * a real publish first and only marks the item Posted on success; a failed
+ * publish stays Scheduled with `postError` set so it's retried, not silently
+ * dropped. Without a connection, items are marked Posted directly (manual
+ * posting workflow), same as before.
+ */
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   if (body.action !== "process") {
@@ -42,18 +51,35 @@ export async function POST(req: NextRequest) {
   }
 
   const db = await readDb();
-  const now = new Date();
-  const nowIso = now.toISOString();
+  const nowIso = new Date().toISOString();
   const nowKey = nowIso.slice(0, 16);
 
   const processed: string[] = [];
-  db.content = db.content.map((c) => {
-    if (c.status !== "Scheduled") return c;
-    if (`${c.date}T${c.time}` > nowKey) return c;
-    processed.push(c.id);
-    return { ...c, status: "Posted", postedAt: nowIso };
-  });
+  const failed: string[] = [];
 
-  if (processed.length > 0) await writeDb(db);
-  return NextResponse.json({ processed: processed.length, ids: processed });
+  for (let i = 0; i < db.content.length; i++) {
+    const item = db.content[i];
+    if (item.status !== "Scheduled") continue;
+    if (`${item.date}T${item.time}` > nowKey) continue;
+
+    const client = db.clients.find((c) => c.id === item.clientId);
+    const connection = client?.connections?.[item.platform];
+
+    if (connection && (item.platform === "Instagram" || item.platform === "Facebook")) {
+      const result = await publishToMeta(item.platform, connection, item);
+      if (result.ok) {
+        db.content[i] = { ...item, status: "Posted", postedAt: nowIso, postError: undefined };
+        processed.push(item.id);
+      } else {
+        db.content[i] = { ...item, postError: result.error };
+        failed.push(item.id);
+      }
+    } else {
+      db.content[i] = { ...item, status: "Posted", postedAt: nowIso };
+      processed.push(item.id);
+    }
+  }
+
+  if (processed.length > 0 || failed.length > 0) await writeDb(db);
+  return NextResponse.json({ processed: processed.length, failed: failed.length, ids: processed });
 }

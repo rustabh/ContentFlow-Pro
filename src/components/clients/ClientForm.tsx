@@ -48,6 +48,19 @@ export default function ClientForm({
         : [...draft.platforms, p]
     );
 
+  const setConnection = (
+    platform: "Instagram" | "Facebook",
+    field: "accessToken" | "accountId",
+    value: string
+  ) =>
+    setDraft((d) => {
+      const existing = d.connections?.[platform] ?? { accessToken: "", accountId: "" };
+      return {
+        ...d,
+        connections: { ...d.connections, [platform]: { ...existing, [field]: value } },
+      };
+    });
+
   return (
     <form
       onSubmit={(e) => {
@@ -197,6 +210,52 @@ export default function ClientForm({
           placeholder="Brand guidelines, do's and don'ts, references…"
         />
       </Field>
+
+      <div className="rounded-xl bg-gray-50 p-4">
+        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Platform Connections (Optional)
+        </div>
+        <p className="mb-3 text-xs text-gray-400">
+          Connect this client&apos;s Instagram/Facebook account to enable real
+          auto-posting from the Scheduling Queue. Requires a Meta developer
+          app with a long-lived Page access token. Leave blank to keep the
+          current manual workflow (queue items are just marked Posted).
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-gray-600">Instagram</div>
+            <Field label="IG Business Account ID">
+              <TextInput
+                value={draft.connections?.Instagram?.accountId ?? ""}
+                onChange={(e) => setConnection("Instagram", "accountId", e.target.value)}
+              />
+            </Field>
+            <Field label="Access Token">
+              <TextInput
+                type="password"
+                value={draft.connections?.Instagram?.accessToken ?? ""}
+                onChange={(e) => setConnection("Instagram", "accessToken", e.target.value)}
+              />
+            </Field>
+          </div>
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-gray-600">Facebook</div>
+            <Field label="Page ID">
+              <TextInput
+                value={draft.connections?.Facebook?.accountId ?? ""}
+                onChange={(e) => setConnection("Facebook", "accountId", e.target.value)}
+              />
+            </Field>
+            <Field label="Access Token">
+              <TextInput
+                type="password"
+                value={draft.connections?.Facebook?.accessToken ?? ""}
+                onChange={(e) => setConnection("Facebook", "accessToken", e.target.value)}
+              />
+            </Field>
+          </div>
+        </div>
+      </div>
 
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="secondary" onClick={onCancel}>

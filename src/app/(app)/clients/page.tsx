@@ -20,6 +20,7 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<Client[] | null>(null);
   const [modal, setModal] = useState<"add" | Client | null>(null);
   const [saving, setSaving] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const { query } = useSearch();
 
   const load = useCallback(() => {
@@ -53,6 +54,20 @@ export default function ClientsPage() {
     setSaving(false);
     setModal(null);
     load();
+  };
+
+  const copyShareLink = async (client: Client) => {
+    const res = await fetch(`/api/clients/${client.id}/share`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (!res.ok) return;
+    const { shareToken } = await res.json();
+    const url = `${window.location.origin}/approve/${shareToken}`;
+    await navigator.clipboard.writeText(url).catch(() => {});
+    setCopiedId(client.id);
+    setTimeout(() => setCopiedId((id) => (id === client.id ? null : id)), 2000);
   };
 
   const remove = async (client: Client) => {
@@ -173,6 +188,9 @@ export default function ClientsPage() {
                     onClick={() => setModal(client)}
                   >
                     Edit
+                  </Button>
+                  <Button variant="secondary" onClick={() => copyShareLink(client)}>
+                    {copiedId === client.id ? "Copied!" : "Share Link"}
                   </Button>
                   <Button variant="danger" onClick={() => remove(client)}>
                     Delete

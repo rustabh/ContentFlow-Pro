@@ -73,11 +73,11 @@ export default function QueuePage() {
       <Card className="mb-4 flex items-start gap-3 border-primary-100 bg-primary-50/40">
         <span className="mt-0.5 text-primary-500">ℹ️</span>
         <p className="text-xs leading-relaxed text-gray-600">
-          This queue tracks what&apos;s due to publish and when. <strong>Run Due Posts</strong>{" "}
-          marks due items as Posted — it doesn&apos;t push to Instagram/Facebook/etc. yet.
-          Real auto-posting to each platform needs that platform&apos;s developer API connected
-          (OAuth app + access tokens) for this account; once that&apos;s set up, this same button
-          becomes the trigger for the real publish calls.
+          <strong>Run Due Posts</strong> publishes due items automatically for any client with a
+          connected Instagram or Facebook account (set this up per-client under Clients → Edit →
+          Platform Connections). Clients without a connection just get marked Posted, for a manual
+          workflow. A failed publish stays in the queue with the error shown below — nothing is
+          silently dropped.
         </p>
       </Card>
 
@@ -162,6 +162,11 @@ function QueueSection({
                 {item.topic || "Untitled"}
               </div>
               <div className="text-xs text-gray-400">{item.clientName}</div>
+              {item.postError && (
+                <div className="mt-0.5 truncate text-xs text-red-500">
+                  Publish failed: {item.postError}
+                </div>
+              )}
             </div>
           </div>
         ))}

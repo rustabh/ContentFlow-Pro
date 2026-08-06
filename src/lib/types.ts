@@ -40,6 +40,14 @@ export interface Client {
   platforms: Platform[];
   notes: string;
   createdAt: string;
+  shareToken?: string; // unguessable token for the client-facing read-only approval link
+  connections?: Partial<Record<Platform, PlatformConnection>>;
+}
+
+export interface PlatformConnection {
+  accessToken: string;
+  /** Instagram Business Account ID, or Facebook Page ID. */
+  accountId: string;
 }
 
 export interface ApprovalLogEntry {
@@ -69,6 +77,9 @@ export interface ContentItem {
   status: ContentStatus;
   approvalHistory?: ApprovalLogEntry[];
   postedAt?: string; // ISO timestamp — set when the queue engine marks it Posted
+  mediaKey?: string; // Netlify Blobs key for the attached image/video
+  mediaContentType?: string;
+  postError?: string; // set when a real platform publish attempt fails
 }
 
 export interface Shoot {
@@ -150,6 +161,23 @@ export interface DashboardData {
 
 export interface QueueItem extends ContentItem {
   clientName: string;
+}
+
+/** Fields exposed on the public, token-gated client approval page — no internal team info. */
+export interface PublicApprovalItem {
+  id: string;
+  date: string;
+  time: string;
+  platform: Platform;
+  type: ContentType;
+  topic: string;
+  caption: string;
+  hashtags: string;
+  cta: string;
+  approval: ApprovalStatus;
+  status: ContentStatus;
+  mediaKey?: string;
+  mediaContentType?: string;
 }
 
 export interface PlatformCount {

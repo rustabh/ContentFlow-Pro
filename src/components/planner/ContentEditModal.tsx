@@ -40,6 +40,8 @@ export default function ContentEditModal({
   const [saving, setSaving] = useState(false);
   const [approvalNote, setApprovalNote] = useState("");
   const [approvedBy, setApprovedBy] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   useEffect(() => {
     setDraft(item);
@@ -76,6 +78,27 @@ export default function ContentEditModal({
     await fetch(`/api/content/${draft.id}`, { method: "DELETE" });
     onDeleted(draft.id);
     onClose();
+  };
+
+  const uploadMedia = async (file: File) => {
+    setUploadError("");
+    setUploading(true);
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/media", { method: "POST", body: form });
+    setUploading(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setUploadError(body.error ?? "Upload failed");
+      return;
+    }
+    const { key, contentType } = await res.json();
+    set("mediaKey", key);
+    set("mediaContentType", contentType);
+  };
+
+  const removeMedia = () => {
+    setDraft((d) => (d ? { ...d, mediaKey: undefined, mediaContentType: undefined } : d));
   };
 
   const teamSelect = (
@@ -163,6 +186,39 @@ export default function ContentEditModal({
             />
           </Field>
         </div>
+
+        <Field label="Attachment (image or video, up to 25MB)">
+          {draft.mediaKey ? (
+            <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/60 p-2">
+              {draft.mediaContentType?.startsWith("video/") ? (
+                <video
+                  src={`/api/media/${draft.mediaKey}`}
+                  controls
+                  className="h-20 w-20 rounded-lg object-cover"
+                />
+              ) : (
+                <img
+                  src={`/api/media/${draft.mediaKey}`}
+                  alt="Attachment"
+                  className="h-20 w-20 rounded-lg object-cover"
+                />
+              )}
+              <Button variant="secondary" onClick={removeMedia}>
+                Remove
+              </Button>
+            </div>
+          ) : (
+            <input
+              type="file"
+              accept="image/*,video/*"
+              disabled={uploading}
+              onChange={(e) => e.target.files?.[0] && uploadMedia(e.target.files[0])}
+              className="block w-full text-sm text-gray-500 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-600 hover:file:bg-primary-100"
+            />
+          )}
+          {uploading && <p className="mt-1 text-xs text-gray-400">Uploading…</p>}
+          {uploadError && <p className="mt-1 text-xs text-red-500">{uploadError}</p>}
+        </Field>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {teamSelect("Designer", "designer", settings?.team.designers ?? [])}
