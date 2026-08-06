@@ -74,10 +74,10 @@ export default function QueuePage() {
         <span className="mt-0.5 text-primary-500">ℹ️</span>
         <p className="text-xs leading-relaxed text-gray-600">
           <strong>Run Due Posts</strong> publishes due items automatically for any client with a
-          connected Instagram or Facebook account (set this up per-client under Clients → Edit →
-          Platform Connections). Clients without a connection just get marked Posted, for a manual
-          workflow. A failed publish stays in the queue with the error shown below — nothing is
-          silently dropped.
+          connected Instagram, Facebook, LinkedIn or YouTube account (set this up per-client under
+          Clients → Edit → Platform Connections). Clients without a connection — or platforms with
+          no connection set — just get marked Posted, for a manual workflow. A failed publish stays
+          in the queue with the error shown below — nothing is silently dropped.
         </p>
       </Card>
 

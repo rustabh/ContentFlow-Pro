@@ -46,8 +46,12 @@ export interface Client {
 
 export interface PlatformConnection {
   accessToken: string;
-  /** Instagram Business Account ID, or Facebook Page ID. */
+  /** Instagram Business Account ID, Facebook Page ID, or LinkedIn Organization URN. Informational only for YouTube. */
   accountId: string;
+  /** YouTube only — access tokens expire hourly, so a refresh token + OAuth client credentials are required to auto-renew before each publish. */
+  refreshToken?: string;
+  clientId?: string;
+  clientSecret?: string;
 }
 
 export interface ApprovalLogEntry {
