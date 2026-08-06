@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  Badge,
   Button,
   Field,
   Modal,
@@ -16,6 +17,7 @@ import {
   STATUSES,
 } from "@/lib/constants";
 import type { ContentItem, Settings } from "@/lib/types";
+import { formatDate, formatTime } from "@/lib/utils";
 
 /**
  * Shared editor for a content item — used by the Planner table and the
@@ -36,8 +38,14 @@ export default function ContentEditModal({
   const [draft, setDraft] = useState<ContentItem | null>(item);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saving, setSaving] = useState(false);
+  const [approvalNote, setApprovalNote] = useState("");
+  const [approvedBy, setApprovedBy] = useState("");
 
-  useEffect(() => setDraft(item), [item]);
+  useEffect(() => {
+    setDraft(item);
+    setApprovalNote("");
+    setApprovedBy("");
+  }, [item]);
   useEffect(() => {
     fetch("/api/settings")
       .then((r) => r.json())
@@ -54,7 +62,7 @@ export default function ContentEditModal({
     const res = await fetch(`/api/content/${draft.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(draft),
+      body: JSON.stringify({ ...draft, approvalNote, approvedBy }),
     });
     setSaving(false);
     if (res.ok) {
@@ -184,6 +192,61 @@ export default function ContentEditModal({
             </Select>
           </Field>
         </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Reviewer name (optional)">
+            <TextInput
+              placeholder="e.g. Rustabh"
+              value={approvedBy}
+              onChange={(e) => setApprovedBy(e.target.value)}
+            />
+          </Field>
+          <Field label="Note for this approval change (optional)">
+            <TextInput
+              placeholder="Reason, feedback, or context…"
+              value={approvalNote}
+              onChange={(e) => setApprovalNote(e.target.value)}
+            />
+          </Field>
+        </div>
+
+        {draft.approvalHistory && draft.approvalHistory.length > 0 && (
+          <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-3">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Approval History
+            </div>
+            <div className="max-h-36 space-y-2 overflow-y-auto">
+              {[...draft.approvalHistory].reverse().map((h) => (
+                <div key={h.id} className="flex items-start gap-2 text-xs">
+                  <Badge
+                    color={
+                      h.status === "Approved"
+                        ? "bg-green-50 text-green-700"
+                        : h.status === "Rejected"
+                          ? "bg-red-50 text-red-600"
+                          : "bg-gray-100 text-gray-500"
+                    }
+                  >
+                    {h.status}
+                  </Badge>
+                  <div className="min-w-0 flex-1 text-gray-600">
+                    {h.note && <span>{h.note} — </span>}
+                    <span className="text-gray-400">
+                      {h.by} · {formatDate(h.at.slice(0, 10))} {formatTime(h.at.slice(11, 16))}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {draft.postedAt && (
+          <p className="text-xs text-gray-400">
+            Posted {formatDate(draft.postedAt.slice(0, 10))} at{" "}
+            {formatTime(draft.postedAt.slice(11, 16))}
+          </p>
+        )}
 
         <div className="flex items-center justify-between pt-2">
           <Button variant="danger" onClick={remove}>

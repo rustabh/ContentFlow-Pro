@@ -48,6 +48,20 @@ const NAV = [
     ),
   },
   {
+    href: "/queue",
+    label: "Scheduling Queue",
+    icon: (
+      <path d="M12 8v4l3 3M12 22a10 10 0 100-20 10 10 0 000 20z" strokeLinecap="round" strokeLinejoin="round" />
+    ),
+  },
+  {
+    href: "/analytics",
+    label: "Analytics",
+    icon: (
+      <path d="M3 3v18h18M8 17V9m5 8V5m5 12v-6" strokeLinecap="round" strokeLinejoin="round" />
+    ),
+  },
+  {
     href: "/exports",
     label: "Exports",
     icon: (

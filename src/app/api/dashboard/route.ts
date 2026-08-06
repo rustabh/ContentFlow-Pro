@@ -62,6 +62,17 @@ export async function GET() {
   });
 
   const notifications: Notification[] = [];
+  const overdueScheduled = db.content.filter(
+    (c) => c.status === "Scheduled" && `${c.date}T${c.time}` < new Date().toISOString().slice(0, 16)
+  ).length;
+  if (overdueScheduled > 0) {
+    notifications.push({
+      id: "overdue-queue",
+      title: `${overdueScheduled} scheduled post${overdueScheduled > 1 ? "s" : ""} overdue`,
+      detail: "Past their scheduled time and still waiting in the queue",
+      href: "/queue",
+    });
+  }
   for (const s of upcomingShoots.slice(0, 3)) {
     notifications.push({
       id: `shoot-${s.id}`,

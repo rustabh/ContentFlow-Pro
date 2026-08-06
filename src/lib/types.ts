@@ -42,6 +42,14 @@ export interface Client {
   createdAt: string;
 }
 
+export interface ApprovalLogEntry {
+  id: string;
+  status: ApprovalStatus;
+  note: string;
+  by: string;
+  at: string; // ISO timestamp
+}
+
 export interface ContentItem {
   id: string;
   clientId: string;
@@ -59,6 +67,8 @@ export interface ContentItem {
   shooter: string;
   approval: ApprovalStatus;
   status: ContentStatus;
+  approvalHistory?: ApprovalLogEntry[];
+  postedAt?: string; // ISO timestamp — set when the queue engine marks it Posted
 }
 
 export interface Shoot {
@@ -136,4 +146,40 @@ export interface DashboardData {
   monthItems: ContentItem[];
   progress: ClientProgress[];
   notifications: Notification[];
+}
+
+export interface QueueItem extends ContentItem {
+  clientName: string;
+}
+
+export interface PlatformCount {
+  platform: Platform;
+  count: number;
+}
+
+export interface ClientAnalytics {
+  clientId: string;
+  clientName: string;
+  brandName: string;
+  industry: string;
+  plannedThisMonth: number;
+  postedThisMonth: number;
+  consistencyPct: number;
+  platformBreakdown: PlatformCount[];
+}
+
+export interface MonthlyTrendPoint {
+  month: string;
+  planned: number;
+  posted: number;
+}
+
+export interface AnalyticsData {
+  totalPostedAllTime: number;
+  plannedThisMonth: number;
+  postedThisMonth: number;
+  overallConsistencyPct: number;
+  monthlyTrend: MonthlyTrendPoint[];
+  platformBreakdown: PlatformCount[];
+  clientAnalytics: ClientAnalytics[];
 }

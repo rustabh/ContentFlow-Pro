@@ -224,6 +224,33 @@ const GENERIC_IDEAS: IdeaTemplate[] = [
     cta: "Comment a myth you want us to bust next",
     hashtags: "#MythVsFact #{brandTag} #DidYouKnow",
   },
+  {
+    topic: "FAQ round-up",
+    hook: "The question we get asked the most.",
+    script:
+      "State the question exactly how customers ask it. Give a clear, confident answer in plain language. Invite more questions.",
+    caption: "You asked, we're answering. Save this for later. 💬",
+    cta: "Drop your question in the comments",
+    hashtags: "#FAQ #AskUsAnything #{brandTag} #GoodToKnow",
+  },
+  {
+    topic: "Milestone / announcement",
+    hook: "We couldn't have done this without you.",
+    script:
+      "Show the milestone (anniversary, new location, award, follower count). Thank the community. Tease what's next.",
+    caption: "A big thank you to everyone who's been part of the {brand} journey. 🎉",
+    cta: "Tell us your favorite memory with us",
+    hashtags: "#Milestone #ThankYou #{brandTag} #Grateful",
+  },
+  {
+    topic: "Poll / this or that",
+    hook: "We can't decide — help us out.",
+    script:
+      "Present two options side by side. Explain the context in one line. Ask the audience to vote in comments or the poll sticker.",
+    caption: "This or that? Let us know below. 👇",
+    cta: "Vote in the comments or the poll",
+    hashtags: "#ThisOrThat #Poll #{brandTag} #YourOpinion",
+  },
 ];
 
 const INDUSTRY_IDEAS: Record<string, IdeaTemplate[]> = {
@@ -405,6 +432,122 @@ const INDUSTRY_IDEAS: Record<string, IdeaTemplate[]> = {
       caption: "Real teams, real results. This is what success looks like. 📈",
       cta: "Book a demo to see it live",
       hashtags: "#CaseStudy #CustomerSuccess #{brandTag}",
+    },
+  ],
+  Education: [
+    {
+      topic: "Study tip / quick lesson",
+      hook: "Here's the trick that makes this click instantly.",
+      script:
+        "State the confusing concept. Break it into one simple analogy. Show a quick example. Recap in one sentence.",
+      caption: "Learning made simple — save this for your next study session. 📚",
+      cta: "Save this and share with a classmate",
+      hashtags: "#StudyTips #LearnWithUs #{brandTag} #EduReels",
+    },
+    {
+      topic: "Student success story",
+      hook: "From struggling with the basics to acing it — here's how.",
+      script:
+        "Show the student's starting point, the turning point with {brand}, and the result in their own words.",
+      caption: "Every success story starts with showing up. Proud of this one. 🎓",
+      cta: "DM us to start your own journey",
+      hashtags: "#SuccessStory #StudentLife #{brandTag} #Education",
+    },
+    {
+      topic: "Enrollment / batch announcement",
+      hook: "New batch starting soon — seats filling fast.",
+      script:
+        "Show the course/curriculum highlights, the format, and the start date. Close with how to enroll.",
+      caption: "Your next chapter starts here. New batch, new goals. 📖",
+      cta: "Enroll now — link in bio",
+      hashtags: "#Enrollment #NewBatch #{brandTag} #LearnWithUs",
+    },
+  ],
+  Healthcare: [
+    {
+      topic: "Health tip",
+      hook: "One small habit that makes a big difference.",
+      script:
+        "State the common problem. Give one clear, actionable tip explained simply. Reinforce with a friendly reminder.",
+      caption: "Small steps, real results. Your health, made simple. 🩺",
+      cta: "Save this and share it with someone who needs it",
+      hashtags: "#HealthTips #Wellness #{brandTag} #StayHealthy",
+    },
+    {
+      topic: "Patient testimonial",
+      hook: "\"I finally found a place that listens.\"",
+      script:
+        "Patient shares their concern, the care they received, and how they feel now. Keep it warm and reassuring.",
+      caption: "Thank you for trusting us with your care. Stories like this matter. 💙",
+      cta: "Book your consultation today",
+      hashtags: "#PatientCare #Testimonial #{brandTag} #Healthcare",
+    },
+    {
+      topic: "Myth vs medical fact",
+      hook: "Let's clear up a common health myth.",
+      script:
+        "State the myth. Explain the medical fact simply and clearly, citing general best practice. Give one practical takeaway.",
+      caption: "Your health deserves facts, not myths. Here's the truth. ✅",
+      cta: "Comment a health myth you want us to address",
+      hashtags: "#HealthFacts #MythVsFact #{brandTag} #WellnessWednesday",
+    },
+  ],
+  Travel: [
+    {
+      topic: "Destination spotlight",
+      hook: "This is the view everyone's chasing right now.",
+      script:
+        "Sweeping shots of the destination, one hidden gem, and the best time to visit. Close with booking details.",
+      caption: "Pack your bags — this one's worth it. ✈️",
+      cta: "DM us to plan your trip",
+      hashtags: "#TravelGoals #Wanderlust #{brandTag} #DestinationSpotlight",
+    },
+    {
+      topic: "Travel tips",
+      hook: "3 things I wish I knew before this trip.",
+      script:
+        "Quick practical tips with on-screen text: packing, local etiquette, budget hacks. Recap and invite saves.",
+      caption: "Travel smarter, not harder. Save this before your next trip. 🧳",
+      cta: "Save this for your next getaway",
+      hashtags: "#TravelTips #{brandTag} #TripPlanning",
+    },
+    {
+      topic: "Limited-time package",
+      hook: "This deal won't last — here's why you should book now.",
+      script:
+        "Show the package highlights, inclusions, and the deadline. Close with how to book.",
+      caption: "Your next adventure, made easy. Limited seats available. 🌴",
+      cta: "Book now — link in bio",
+      hashtags: "#TravelDeals #{brandTag} #BookNow",
+    },
+  ],
+  "E-commerce": [
+    {
+      topic: "New arrival",
+      hook: "It's finally here — and it's going to sell out fast.",
+      script:
+        "Unbox/reveal the product with close-up shots. Highlight 3 key features. End with availability.",
+      caption: "New in: the piece you didn't know you needed. 🛍️",
+      cta: "Shop now — link in bio",
+      hashtags: "#NewArrival #ShopNow #{brandTag} #OnlineShopping",
+    },
+    {
+      topic: "Unboxing / product in action",
+      hook: "What you actually get when you order from us.",
+      script:
+        "Show the packaging, the unboxing moment, and the product in use. Keep it fast-paced and satisfying.",
+      caption: "From our warehouse to your doorstep, with care. 📦",
+      cta: "Order yours today — link in bio",
+      hashtags: "#Unboxing #{brandTag} #CustomerFirst",
+    },
+    {
+      topic: "Flash sale / limited offer",
+      hook: "24 hours only — don't miss this one.",
+      script:
+        "Announce the discount, show the bestsellers included, and the countdown. Close with a clear CTA.",
+      caption: "Flash sale alert! Grab your favorites before they're gone. ⚡",
+      cta: "Shop the sale now — link in bio",
+      hashtags: "#FlashSale #LimitedOffer #{brandTag} #ShopNow",
     },
   ],
 };
