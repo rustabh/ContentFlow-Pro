@@ -1,20 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/lib/auth";
 import { readDb, writeDb } from "@/lib/db";
+import { publishToLinkedIn } from "@/lib/linkedinPublish";
 import { publishToMeta } from "@/lib/metaPublish";
-import type { QueueItem } from "@/lib/types";
+import type { ContentItem, PlatformConnection, QueueItem } from "@/lib/types";
+import { publishToYouTube } from "@/lib/youtubePublish";
 
 /**
  * The scheduling queue: every content item marked "Scheduled" is due to go
- * out at its date/time. This is the foundation for real auto-posting —
- * once a client connects a platform account, the POST handler below is
- * where the actual publish call (Meta Graph API, etc.) would happen instead
- * of just flipping the status to "Posted".
+ * out at its date/time. If the client has connected the item's platform
+ * (see ClientForm "Platform Connections"), processing attempts a real
+ * publish; otherwise the item is just marked Posted (manual workflow).
  */
 
 function clientNameOf(clients: { id: string; name: string; brandName: string }[], id: string) {
   const c = clients.find((c) => c.id === id);
   return c?.brandName || c?.name || "Unknown";
+}
+
+/** Dispatch a publish attempt to the right platform API, or null if the platform has no real integration yet. */
+async function publishTo(
+  platform: ContentItem["platform"],
+  connection: PlatformConnection,
+  item: ContentItem
+): Promise<{ ok: true } | { ok: false; error: string } | null> {
+  switch (platform) {
+    case "Instagram":
+    case "Facebook":
+      return publishToMeta(platform, connection, item);
+    case "LinkedIn":
+      return publishToLinkedIn(connection, item);
+    case "YouTube":
+      return publishToYouTube(connection, item);
+    default:
+      return null;
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -41,12 +61,13 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST { action: "process" } — mark every due "Scheduled" item as "Posted".
- * If the client has connected the item's platform (Instagram/Facebook via
- * the Meta Graph API — see ClientForm "Platform Connections"), this attempts
- * a real publish first and only marks the item Posted on success; a failed
- * publish stays Scheduled with `postError` set so it's retried, not silently
- * dropped. Without a connection, items are marked Posted directly (manual
- * posting workflow), same as before.
+ * If the client has connected the item's platform (Instagram, Facebook,
+ * LinkedIn or YouTube — see ClientForm "Platform Connections"), this
+ * attempts a real publish first and only marks the item Posted on success;
+ * a failed publish stays Scheduled with `postError` set so it's retried,
+ * not silently dropped. Without a connection (or for platforms with no
+ * real integration yet — Pinterest, TikTok, X, Threads), items are marked
+ * Posted directly (manual posting workflow), same as before.
  */
 export async function POST(req: NextRequest) {
   const user = await getUserFromRequest(req);
@@ -71,19 +92,17 @@ export async function POST(req: NextRequest) {
 
     const client = db.clients.find((c) => c.id === item.clientId);
     const connection = client?.connections?.[item.platform];
+    const result = connection ? await publishTo(item.platform, connection, item) : null;
 
-    if (connection && (item.platform === "Instagram" || item.platform === "Facebook")) {
-      const result = await publishToMeta(item.platform, connection, item);
-      if (result.ok) {
-        db.content[i] = { ...item, status: "Posted", postedAt: nowIso, postError: undefined };
-        processed.push(item.id);
-      } else {
-        db.content[i] = { ...item, postError: result.error };
-        failed.push(item.id);
-      }
-    } else {
+    if (result === null) {
       db.content[i] = { ...item, status: "Posted", postedAt: nowIso };
       processed.push(item.id);
+    } else if (result.ok) {
+      db.content[i] = { ...item, status: "Posted", postedAt: nowIso, postError: undefined };
+      processed.push(item.id);
+    } else {
+      db.content[i] = { ...item, postError: result.error };
+      failed.push(item.id);
     }
   }
 

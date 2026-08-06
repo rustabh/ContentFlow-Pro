@@ -7,6 +7,8 @@ import type { Client, Platform } from "@/lib/types";
 
 export type ClientDraft = Omit<Client, "id" | "createdAt">;
 
+type ConnectablePlatform = "Instagram" | "Facebook" | "LinkedIn" | "YouTube";
+
 const EMPTY: ClientDraft = {
   name: "",
   brandName: "",
@@ -49,8 +51,8 @@ export default function ClientForm({
     );
 
   const setConnection = (
-    platform: "Instagram" | "Facebook",
-    field: "accessToken" | "accountId",
+    platform: ConnectablePlatform,
+    field: "accessToken" | "accountId" | "refreshToken" | "clientId" | "clientSecret",
     value: string
   ) =>
     setDraft((d) => {
@@ -216,10 +218,10 @@ export default function ClientForm({
           Platform Connections (Optional)
         </div>
         <p className="mb-3 text-xs text-gray-400">
-          Connect this client&apos;s Instagram/Facebook account to enable real
-          auto-posting from the Scheduling Queue. Requires a Meta developer
-          app with a long-lived Page access token. Leave blank to keep the
-          current manual workflow (queue items are just marked Posted).
+          Connect this client&apos;s accounts to enable real auto-posting from
+          the Scheduling Queue. Each platform needs its own developer app —
+          leave any of these blank to keep the manual workflow for that
+          platform (queue items are just marked Posted).
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -253,6 +255,63 @@ export default function ClientForm({
                 onChange={(e) => setConnection("Facebook", "accessToken", e.target.value)}
               />
             </Field>
+          </div>
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-gray-600">LinkedIn</div>
+            <p className="text-[11px] text-gray-400">
+              Company Page posts only, text + hashtags (no image yet).
+            </p>
+            <Field label="Organization ID">
+              <TextInput
+                placeholder="the number in urn:li:organization:…"
+                value={draft.connections?.LinkedIn?.accountId ?? ""}
+                onChange={(e) => setConnection("LinkedIn", "accountId", e.target.value)}
+              />
+            </Field>
+            <Field label="Access Token">
+              <TextInput
+                type="password"
+                value={draft.connections?.LinkedIn?.accessToken ?? ""}
+                onChange={(e) => setConnection("LinkedIn", "accessToken", e.target.value)}
+              />
+            </Field>
+          </div>
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-gray-600">YouTube</div>
+            <p className="text-[11px] text-gray-400">
+              Content item needs an attached video — title/description come
+              from Topic/Caption. Tokens expire hourly, so a refresh token +
+              OAuth client credentials are required.
+            </p>
+            <Field label="Access Token">
+              <TextInput
+                type="password"
+                value={draft.connections?.YouTube?.accessToken ?? ""}
+                onChange={(e) => setConnection("YouTube", "accessToken", e.target.value)}
+              />
+            </Field>
+            <Field label="Refresh Token">
+              <TextInput
+                type="password"
+                value={draft.connections?.YouTube?.refreshToken ?? ""}
+                onChange={(e) => setConnection("YouTube", "refreshToken", e.target.value)}
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="OAuth Client ID">
+                <TextInput
+                  value={draft.connections?.YouTube?.clientId ?? ""}
+                  onChange={(e) => setConnection("YouTube", "clientId", e.target.value)}
+                />
+              </Field>
+              <Field label="OAuth Client Secret">
+                <TextInput
+                  type="password"
+                  value={draft.connections?.YouTube?.clientSecret ?? ""}
+                  onChange={(e) => setConnection("YouTube", "clientSecret", e.target.value)}
+                />
+              </Field>
+            </div>
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@ deliverables, shoots, captions and content calendars.
 - **Workflow** — Planned → Shoot Pending → Editing → Approval → Scheduled → Posted, plus a separate approval state; every stage editable, with a full approval history trail (reviewer, note, timestamp) per item
 - **Package Logic** — changing a client's package automatically rebuilds the current month's plan (already-posted items are kept and counted)
 - **Scheduling Queue** — every "Scheduled" item in one place (Overdue / Due Today / Upcoming); "Run Due Posts" publishes automatically for clients with a connected Instagram/Facebook account, or marks items Posted for manual workflows
-- **Auto-Posting (Instagram/Facebook)** — optional per-client connection (Meta Graph API) so the Scheduling Queue can publish for real; falls back to manual status tracking when not connected
+- **Auto-Posting (Instagram/Facebook/LinkedIn/YouTube)** — optional per-client connection so the Scheduling Queue can publish for real; falls back to manual status tracking when not connected. Instagram/Facebook via the Meta Graph API, LinkedIn Company Page posts (text + hashtags) via the UGC Posts API, YouTube video uploads (needs an attached video) via the Data API v3 with OAuth refresh-token support
 - **Media Attachments** — attach an image or video to any content item (stored in Netlify Blobs), shown in the planner, queue, and client approval view
 - **Client Approval Links** — a shareable, token-gated read-only link per client so they can approve/reject this month's plan without an internal login
 - **AI-Generated Ideas** — when `ANTHROPIC_API_KEY` is set, the Content Ideas generator calls Claude for real, brand-specific captions instead of static templates (automatic fallback when no key is set)
@@ -83,6 +83,8 @@ src/
     generator.ts      # smart scheduling, placeholder copy, idea generator
     ai.ts             # optional Claude-powered idea generation
     metaPublish.ts     # Instagram/Facebook publishing via the Meta Graph API
+    linkedinPublish.ts # LinkedIn Company Page publishing via the UGC Posts API
+    youtubePublish.ts  # YouTube video uploads via the Data API v3 (OAuth refresh)
     approval.ts        # shared approval-history helper
     constants.ts      # platforms, statuses, best posting times, theme maps
     utils.ts          # date/format helpers
