@@ -15,7 +15,7 @@ deliverables, shoots, captions and content calendars.
 - **Workflow** — Planned → Shoot Pending → Editing → Approval → Scheduled → Posted, plus a separate approval state; every stage editable, with a full approval history trail (reviewer, note, timestamp) per item
 - **Package Logic** — changing a client's package automatically rebuilds the current month's plan (already-posted items are kept and counted)
 - **Scheduling Queue** — every "Scheduled" item in one place (Overdue / Due Today / Upcoming); "Run Due Posts" publishes automatically for clients with a connected Instagram/Facebook account, or marks items Posted for manual workflows
-- **Auto-Posting (Instagram/Facebook/LinkedIn/YouTube)** — optional per-client connection so the Scheduling Queue can publish for real; falls back to manual status tracking when not connected. Instagram/Facebook via the Meta Graph API, LinkedIn Company Page posts (text + hashtags) via the UGC Posts API, YouTube video uploads (needs an attached video) via the Data API v3 with OAuth refresh-token support
+- **Auto-Posting (Instagram/Facebook/LinkedIn/YouTube)** — optional per-client connection so the Scheduling Queue can publish for real; falls back to manual status tracking when not connected. Instagram/Facebook via the Meta Graph API, LinkedIn Company Page posts (text + hashtags) via the UGC Posts API, YouTube video uploads (needs an attached video) via the Data API v3 with OAuth refresh-token support. Due posts publish automatically every 15 minutes via a Netlify Scheduled Function — no one has to open the app for content to go out
 - **Media Attachments** — attach an image or video to any content item (stored in Netlify Blobs), shown in the planner, queue, and client approval view
 - **Client Approval Links** — a shareable, token-gated read-only link per client so they can approve/reject this month's plan without an internal login
 - **AI-Generated Ideas** — when `ANTHROPIC_API_KEY` is set, the Content Ideas generator calls Claude for real, brand-specific captions instead of static templates (automatic fallback when no key is set)
@@ -85,6 +85,9 @@ src/
     metaPublish.ts     # Instagram/Facebook publishing via the Meta Graph API
     linkedinPublish.ts # LinkedIn Company Page publishing via the UGC Posts API
     youtubePublish.ts  # YouTube video uploads via the Data API v3 (OAuth refresh)
+    queueProcessor.ts  # shared "publish every due item" logic (used by both
+                        # the manual Run Due Posts button and the scheduled
+                        # auto-publish function below)
     approval.ts        # shared approval-history helper
     constants.ts      # platforms, statuses, best posting times, theme maps
     utils.ts          # date/format helpers
@@ -92,6 +95,12 @@ db/
   index.ts            # Drizzle client (Netlify DB / Postgres)
   schema.ts            # app_state table definition
 netlify/database/migrations/  # SQL migrations for the app_state table
+netlify/functions/
+  auto-publish.ts      # Netlify Scheduled Function — runs processDueQueue()
+                        # automatically every 15 minutes, so connected
+                        # clients' due posts go out without anyone opening
+                        # the app. Change the interval by editing the
+                        # `schedule` cron expression in that file.
 ```
 
 ---
