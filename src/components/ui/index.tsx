@@ -215,17 +215,20 @@ const fieldClass =
 
 export function Field({
   label,
+  hint,
   children,
   className = "",
 }: {
   label: string;
+  hint?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1 block text-xs font-medium text-gray-600">
-        {label}
+      <span className="mb-1 flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-gray-600">{label}</span>
+        {hint}
       </span>
       {children}
     </label>

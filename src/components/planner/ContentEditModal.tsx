@@ -42,6 +42,8 @@ export default function ContentEditModal({
   const [approvedBy, setApprovedBy] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [rewriting, setRewriting] = useState(false);
+  const [rewriteError, setRewriteError] = useState("");
 
   useEffect(() => {
     setDraft(item);
@@ -95,6 +97,20 @@ export default function ContentEditModal({
     const { key, contentType } = await res.json();
     set("mediaKey", key);
     set("mediaContentType", contentType);
+  };
+
+  const rewriteWithAi = async () => {
+    setRewriteError("");
+    setRewriting(true);
+    const res = await fetch(`/api/content/${draft.id}/rewrite`, { method: "POST" });
+    setRewriting(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setRewriteError(body.error ?? "Rewrite failed");
+      return;
+    }
+    const { caption, hashtags, cta } = await res.json();
+    setDraft((d) => (d ? { ...d, caption, hashtags, cta } : d));
   };
 
   const removeMedia = () => {
@@ -164,12 +180,25 @@ export default function ContentEditModal({
             onChange={(e) => set("topic", e.target.value)}
           />
         </Field>
-        <Field label="Caption">
+        <Field
+          label="Caption"
+          hint={
+            <button
+              type="button"
+              onClick={rewriteWithAi}
+              disabled={rewriting}
+              className="text-xs font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50"
+            >
+              {rewriting ? "Rewriting…" : "✨ Rewrite with AI"}
+            </button>
+          }
+        >
           <TextArea
             value={draft.caption}
             onChange={(e) => set("caption", e.target.value)}
           />
         </Field>
+        {rewriteError && <p className="text-xs text-red-500">{rewriteError}</p>}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Hashtags">
             <TextArea

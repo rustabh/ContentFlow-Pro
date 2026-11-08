@@ -74,8 +74,9 @@ export default function QueuePage() {
         <span className="mt-0.5 text-primary-500">ℹ️</span>
         <p className="text-xs leading-relaxed text-gray-600">
           Due items already publish automatically every 15 minutes in the background for any
-          client with a connected Instagram, Facebook, LinkedIn or YouTube account (set this up
-          per-client under Clients → Edit → Platform Connections) — <strong>Run Due Posts</strong>{" "}
+          client with a connected Instagram, Facebook, LinkedIn, YouTube, X or Pinterest account
+          (set this up per-client under Clients → Edit → Platform Connections) —{" "}
+          <strong>Run Due Posts</strong>{" "}
           just publishes right now instead of waiting for that run. Clients without a connection —
           or platforms with no connection set — just get marked Posted, for a manual workflow. A
           failed publish stays in the queue with the error shown below — nothing is silently

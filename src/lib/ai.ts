@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Client, Idea } from "./types";
+import type { Client, ContentItem, Idea } from "./types";
 import { uid } from "./utils";
 
 let cachedClient: Anthropic | null | undefined;
@@ -92,6 +92,67 @@ export async function generateAiIdeas(client: Client, count: number): Promise<Id
       hashtags: idea.hashtags,
       createdAt: new Date().toISOString(),
     }));
+  } catch {
+    return null;
+  }
+}
+
+interface AiCaption {
+  caption: string;
+  hashtags: string;
+  cta: string;
+}
+
+const CAPTION_SCHEMA = {
+  type: "object",
+  properties: {
+    caption: { type: "string" },
+    hashtags: { type: "string" },
+    cta: { type: "string" },
+  },
+  required: ["caption", "hashtags", "cta"],
+  additionalProperties: false,
+} as const;
+
+/**
+ * Rewrite a single content item's caption/hashtags/CTA via Claude, keeping
+ * the same topic and platform but sharpening the copy. Returns null when
+ * ANTHROPIC_API_KEY isn't configured (or the call fails) so callers can show
+ * an error instead of a broken rewrite.
+ */
+export async function generateAiCaption(
+  client: Client,
+  item: ContentItem
+): Promise<AiCaption | null> {
+  const anthropic = getClient();
+  if (!anthropic) return null;
+
+  try {
+    const response = await anthropic.beta.messages.create({
+      model: "claude-opus-5",
+      max_tokens: 2048,
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      output_config: {
+        effort: "medium",
+        format: { type: "json_schema", schema: CAPTION_SCHEMA },
+      },
+      messages: [
+        {
+          role: "user",
+          content: `Rewrite the caption for a ${item.platform} ${item.type} for "${client.brandName || client.name}", a ${client.industry} business. Topic: "${item.topic || "(no topic given)"}". Current caption (improve on this, don't just rephrase it — make it sharper and more specific): "${item.caption || "(none yet)"}". Return a ready-to-post caption, a call to action, and relevant hashtags (space-separated, each starting with #). Keep it authentic and specific to the brand — avoid generic filler.`,
+        },
+      ],
+    });
+
+    if (response.stop_reason === "refusal") return null;
+
+    const textBlock = response.content.find(
+      (b): b is Anthropic.Beta.BetaTextBlock => b.type === "text"
+    );
+    if (!textBlock) return null;
+
+    return JSON.parse(textBlock.text) as AiCaption;
   } catch {
     return null;
   }

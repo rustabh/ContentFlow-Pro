@@ -7,7 +7,13 @@ import type { Client, Platform } from "@/lib/types";
 
 export type ClientDraft = Omit<Client, "id" | "createdAt">;
 
-type ConnectablePlatform = "Instagram" | "Facebook" | "LinkedIn" | "YouTube";
+type ConnectablePlatform =
+  | "Instagram"
+  | "Facebook"
+  | "LinkedIn"
+  | "YouTube"
+  | "X (Twitter)"
+  | "Pinterest";
 
 const EMPTY: ClientDraft = {
   name: "",
@@ -313,6 +319,40 @@ export default function ClientForm({
                 />
               </Field>
             </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-gray-600">X (Twitter)</div>
+            <p className="text-[11px] text-gray-400">
+              Text + hashtags (280 chars), plus the attached image if there
+              is one — no account ID needed, just the token.
+            </p>
+            <Field label="OAuth 2.0 Access Token (tweet.write scope)">
+              <TextInput
+                type="password"
+                value={draft.connections?.["X (Twitter)"]?.accessToken ?? ""}
+                onChange={(e) => setConnection("X (Twitter)", "accessToken", e.target.value)}
+              />
+            </Field>
+          </div>
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-gray-600">Pinterest</div>
+            <p className="text-[11px] text-gray-400">
+              Needs an attached image — Pinterest pins can&apos;t be
+              text-only.
+            </p>
+            <Field label="Board ID">
+              <TextInput
+                value={draft.connections?.Pinterest?.accountId ?? ""}
+                onChange={(e) => setConnection("Pinterest", "accountId", e.target.value)}
+              />
+            </Field>
+            <Field label="Access Token">
+              <TextInput
+                type="password"
+                value={draft.connections?.Pinterest?.accessToken ?? ""}
+                onChange={(e) => setConnection("Pinterest", "accessToken", e.target.value)}
+              />
+            </Field>
           </div>
         </div>
       </div>

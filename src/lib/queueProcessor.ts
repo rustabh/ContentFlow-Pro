@@ -1,7 +1,9 @@
 import { readDb, writeDb } from "./db";
 import { publishToLinkedIn } from "./linkedinPublish";
 import { publishToMeta } from "./metaPublish";
+import { publishToPinterest } from "./pinterestPublish";
 import type { ContentItem, PlatformConnection } from "./types";
+import { publishToX } from "./xPublish";
 import { publishToYouTube } from "./youtubePublish";
 
 /** Dispatch a publish attempt to the right platform API, or null if the platform has no real integration yet. */
@@ -18,6 +20,10 @@ async function publishTo(
       return publishToLinkedIn(connection, item);
     case "YouTube":
       return publishToYouTube(connection, item);
+    case "X (Twitter)":
+      return publishToX(connection, item);
+    case "Pinterest":
+      return publishToPinterest(connection, item);
     default:
       return null;
   }
@@ -25,12 +31,12 @@ async function publishTo(
 
 /**
  * Publish every due "Scheduled" content item and mark it "Posted". If the
- * client has connected the item's platform (Instagram, Facebook, LinkedIn
- * or YouTube — see ClientForm "Platform Connections"), this attempts a real
- * publish first and only marks the item Posted on success; a failed publish
- * stays Scheduled with `postError` set so it's retried, not silently
- * dropped. Without a connection (or for platforms with no real integration
- * yet — Pinterest, TikTok, X, Threads), items are marked Posted directly
+ * client has connected the item's platform (Instagram, Facebook, LinkedIn,
+ * YouTube, X or Pinterest — see ClientForm "Platform Connections"), this
+ * attempts a real publish first and only marks the item Posted on success;
+ * a failed publish stays Scheduled with `postError` set so it's retried,
+ * not silently dropped. Without a connection (or for platforms with no real
+ * integration yet — TikTok, Threads), items are marked Posted directly
  * (manual posting workflow).
  *
  * Called both from the authenticated `/api/queue` POST route (manual "Run
