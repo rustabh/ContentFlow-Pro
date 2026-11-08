@@ -15,9 +15,10 @@ deliverables, shoots, captions and content calendars.
 - **Workflow** — Planned → Shoot Pending → Editing → Approval → Scheduled → Posted, plus a separate approval state; every stage editable, with a full approval history trail (reviewer, note, timestamp) per item
 - **Package Logic** — changing a client's package automatically rebuilds the current month's plan (already-posted items are kept and counted)
 - **Scheduling Queue** — every "Scheduled" item in one place (Overdue / Due Today / Upcoming); "Run Due Posts" publishes automatically for clients with a connected Instagram/Facebook account, or marks items Posted for manual workflows
-- **Auto-Posting (Instagram/Facebook/LinkedIn/YouTube)** — optional per-client connection so the Scheduling Queue can publish for real; falls back to manual status tracking when not connected. Instagram/Facebook via the Meta Graph API, LinkedIn Company Page posts (text + hashtags) via the UGC Posts API, YouTube video uploads (needs an attached video) via the Data API v3 with OAuth refresh-token support. Due posts publish automatically every 15 minutes via a Netlify Scheduled Function — no one has to open the app for content to go out
+- **Auto-Posting (Instagram/Facebook/LinkedIn/YouTube)** — optional per-client connection so the Scheduling Queue can publish for real; falls back to manual status tracking when not connected. Instagram/Facebook via the Meta Graph API, LinkedIn Company Page posts (text + hashtags, plus an attached image) via the UGC Posts API, YouTube video uploads (needs an attached video) via the Data API v3 with OAuth refresh-token support. Due posts publish automatically every 15 minutes via a Netlify Scheduled Function — no one has to open the app for content to go out. A failed publish stays in the queue with the error shown, and shows up as a dashboard notification, instead of being silently dropped
 - **Media Attachments** — attach an image or video to any content item (stored in Netlify Blobs), shown in the planner, queue, and client approval view
 - **Client Approval Links** — a shareable, token-gated read-only link per client so they can approve/reject this month's plan without an internal login
+- **Calendar Feed (.ics)** — a subscribable calendar URL per client (Clients → Calendar Feed), using the same share token as the approval link, so the client's content schedule shows up in their own Google Calendar / Outlook / Apple Calendar
 - **AI-Generated Ideas** — when `ANTHROPIC_API_KEY` is set, the Content Ideas generator calls Claude for real, brand-specific captions instead of static templates (automatic fallback when no key is set)
 - **Analytics** — posting consistency, 6-month trend, platform mix, and per-client performance
 - **Exports** — professionally formatted Excel (.xlsx), CSV, and a printable PDF view
@@ -72,7 +73,7 @@ src/
     print/            # standalone printable calendar view
     api/              # REST-ish route handlers (clients, content, shoots,
                       # ideas, generate, dashboard, settings, export, queue,
-                      # analytics, media, public/approve)
+                      # analytics, media, public/approve, public/calendar)
   components/
     layout/           # Sidebar, Topbar, global search context
     ui/               # Card, Button, Modal, Badge, ProgressBar, fields…
@@ -89,6 +90,7 @@ src/
                         # the manual Run Due Posts button and the scheduled
                         # auto-publish function below)
     approval.ts        # shared approval-history helper
+    ics.ts             # builds the .ics calendar feed (public, token-gated)
     constants.ts      # platforms, statuses, best posting times, theme maps
     utils.ts          # date/format helpers
 db/

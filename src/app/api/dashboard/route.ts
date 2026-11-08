@@ -66,6 +66,17 @@ export async function GET(req: NextRequest) {
   });
 
   const notifications: Notification[] = [];
+  const failedPublishes = db.content.filter(
+    (c) => c.status === "Scheduled" && c.postError
+  );
+  if (failedPublishes.length > 0) {
+    notifications.push({
+      id: "failed-publishes",
+      title: `${failedPublishes.length} post${failedPublishes.length > 1 ? "s" : ""} failed to publish`,
+      detail: failedPublishes[0].postError ?? "Check the Scheduling Queue for details",
+      href: "/queue",
+    });
+  }
   const overdueScheduled = db.content.filter(
     (c) => c.status === "Scheduled" && `${c.date}T${c.time}` < new Date().toISOString().slice(0, 16)
   ).length;

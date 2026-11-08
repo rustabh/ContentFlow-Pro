@@ -259,7 +259,8 @@ export default function ClientForm({
           <div className="space-y-2">
             <div className="text-xs font-semibold text-gray-600">LinkedIn</div>
             <p className="text-[11px] text-gray-400">
-              Company Page posts only, text + hashtags (no image yet).
+              Company Page posts only — text + hashtags, with the attached
+              image if there is one (video isn&apos;t supported yet).
             </p>
             <Field label="Organization ID">
               <TextInput
