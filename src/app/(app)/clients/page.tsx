@@ -21,6 +21,7 @@ export default function ClientsPage() {
   const [modal, setModal] = useState<"add" | Client | null>(null);
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedCalendarId, setCopiedCalendarId] = useState<string | null>(null);
   const { query } = useSearch();
 
   const load = useCallback(() => {
@@ -68,6 +69,20 @@ export default function ClientsPage() {
     await navigator.clipboard.writeText(url).catch(() => {});
     setCopiedId(client.id);
     setTimeout(() => setCopiedId((id) => (id === client.id ? null : id)), 2000);
+  };
+
+  const copyCalendarLink = async (client: Client) => {
+    const res = await fetch(`/api/clients/${client.id}/share`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (!res.ok) return;
+    const { shareToken } = await res.json();
+    const url = `${window.location.origin}/api/public/calendar/${shareToken}`;
+    await navigator.clipboard.writeText(url).catch(() => {});
+    setCopiedCalendarId(client.id);
+    setTimeout(() => setCopiedCalendarId((id) => (id === client.id ? null : id)), 2000);
   };
 
   const remove = async (client: Client) => {
@@ -181,20 +196,35 @@ export default function ClientsPage() {
                   </p>
                 )}
 
-                <div className="mt-auto flex gap-2 pt-4">
-                  <Button
-                    variant="secondary"
-                    className="flex-1 justify-center"
-                    onClick={() => setModal(client)}
-                  >
-                    Edit
-                  </Button>
-                  <Button variant="secondary" onClick={() => copyShareLink(client)}>
-                    {copiedId === client.id ? "Copied!" : "Share Link"}
-                  </Button>
-                  <Button variant="danger" onClick={() => remove(client)}>
-                    Delete
-                  </Button>
+                <div className="mt-auto space-y-2 pt-4">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      className="flex-1 justify-center"
+                      onClick={() => setModal(client)}
+                    >
+                      Edit
+                    </Button>
+                    <Button variant="danger" onClick={() => remove(client)}>
+                      Delete
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      className="flex-1 justify-center"
+                      onClick={() => copyShareLink(client)}
+                    >
+                      {copiedId === client.id ? "Copied!" : "Share Link"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="flex-1 justify-center"
+                      onClick={() => copyCalendarLink(client)}
+                    >
+                      {copiedCalendarId === client.id ? "Copied!" : "📅 Calendar Feed"}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             );
